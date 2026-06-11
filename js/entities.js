@@ -61,7 +61,7 @@ function fire(){
                    dmg:player.damage, pierce:player.pierce, size:player.bulletSize, life:80, hits:[] });
   }
   player.muzzle = 5;             // flash frames
-  beep(900,0.05,'square',0.025);
+  gunshot();
 }
 
 // ---- drawing ----
@@ -113,10 +113,11 @@ function drawEnemy(e){
   // weapon (knife / hammer / axe) on the side facing the player, with a little swing
   if(e.weapon){
     const toP = Math.atan2(player.y-e.y, player.x-e.x);
-    const swing = Math.sin(frame*0.18 + e.x*0.05) * 0.4;
-    const wx = X + Math.cos(toP)*e.size*0.5, wy = Y + Math.sin(toP)*e.size*0.35;
+    const swing = Math.sin(frame*0.18 + e.x*0.05) * 0.45;
+    const wx = X + Math.cos(toP)*e.size*0.6, wy = Y + Math.sin(toP)*e.size*0.5;
     ctx.save(); ctx.translate(wx, wy); ctx.rotate(toP + swing + 0.6);
-    ctx.font=(e.boss?40:Math.round(e.size*0.55))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor='#000'; ctx.shadowBlur=6;
+    ctx.font=(e.boss?78:Math.round(e.size*1.05))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(e.weapon, 0, 0); ctx.restore();
   }
   if(e.boss || e.hp<e.maxHp){

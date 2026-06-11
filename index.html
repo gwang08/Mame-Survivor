@@ -35,6 +35,9 @@
   #levelup h2{ font-size:30px; color:var(--cyan); text-shadow:0 0 18px rgba(54,214,255,.6); }
   .stat{ font-size:clamp(22px,6vw,34px); font-weight:bold; }
   #hint{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:#fff6; font-size:12px; z-index:5; pointer-events:none; }
+  #muteBtn{ position:fixed; top:46px; right:12px; z-index:8; width:42px; height:42px; font-size:20px; cursor:pointer;
+    background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; }
+  #muteBtn:active{ transform:scale(.92); }
 </style>
 </head>
 <body>
@@ -43,15 +46,15 @@
 <!-- MENU -->
 <div class="overlay" id="menu">
   <h1>DOGE SURVIVOR<span class="sub">SURVIVE THE MEME COINS 🐸🚀</span></h1>
-  <p class="tag">Con chó của bạn bị bủa vây bởi đám meme coin (Pepe, Shib, Floki, Bonk...). Tự động bắn, nhặt 💎 lên level, chọn skill, sống càng lâu càng max kèo. Cẩn thận <b>BOSS chó đội nón</b>! 🔥</p>
+  <p class="tag">Your Doge is swarmed by rival meme coins (Pepe, Shib, Floki, Bonk...) wielding knives &amp; hammers. Auto-fire, grab 💎 to level up, pick power-ups, and survive as long as you can. Watch out for the <b>BOSS Doge</b>! 🔥</p>
   <button class="btn" id="startBtn">▶ PLAY</button>
   <div class="best" id="menuBest">Best: 0:00</div>
-  <div class="small">💻 WASD / phím mũi tên di chuyển &nbsp;•&nbsp; 📱 kéo để di chuyển</div>
+  <div class="small">💻 WASD / Arrow keys to move &nbsp;•&nbsp; 📱 Drag to move</div>
 </div>
 
 <!-- LEVEL UP -->
 <div class="overlay" id="levelup" style="display:none">
-  <h2>⬆ LEVEL UP — chọn power-up</h2>
+  <h2>⬆ LEVEL UP — choose a power-up</h2>
   <div id="cards"></div>
 </div>
 
@@ -64,9 +67,11 @@
   <button class="btn" id="retryBtn">↻ RETRY</button>
 </div>
 
+<button id="muteBtn" title="Mute / Unmute">🔊</button>
 <div id="hint">HODL to the moon 🚀 — github.com/gwang08/FlappyDoge</div>
 
 <script src="js/core.js"></script>
+<script src="js/audio.js"></script>
 <script src="js/entities.js"></script>
 <script src="js/upgrades.js"></script>
 <script src="js/game.js"></script>

@@ -14,7 +14,8 @@ function startGame(){
   enemies.length=bullets.length=gems.length=particles.length=floaters.length=0;
   cam.x=cam.y=cam.shake=0; time=0; frame=0; spawnTimer=0; bossTimer=0;
   gs=ST.PLAY; hideOverlays();
-  if(AC && AC.state==='suspended') AC.resume();
+  if(ensureAC() && AC.state==='suspended') AC.resume();
+  startMusic();
 }
 
 function levelUp(){
@@ -157,5 +158,6 @@ function drawJoystick(){
 // ---- boot ----
 $('startBtn').onclick=startGame;
 $('retryBtn').onclick=startGame;
+$('muteBtn').onclick=()=>{ $('muteBtn').textContent = toggleMute() ? '🔇' : '🔊'; };
 $('menuBest').textContent='Best: '+fmt(best);
 (function loop(){ update(); draw(); requestAnimationFrame(loop); })();

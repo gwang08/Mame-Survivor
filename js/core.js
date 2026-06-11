@@ -19,8 +19,10 @@ const sx = x => x - cam.x + VW/2;   // world -> screen X
 const sy = y => y - cam.y + VH/2;   // world -> screen Y
 
 // ---- audio (tiny WebAudio SFX) ----
-let AC;
+let AC, muted=false;
+function ensureAC(){ try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); return AC; }catch(e){ return null; } }
 function beep(freq, dur, type='square', vol=0.05){
+  if(muted) return;
   try{
     AC = AC || new (window.AudioContext||window.webkitAudioContext)();
     const o = AC.createOscillator(), g = AC.createGain();
