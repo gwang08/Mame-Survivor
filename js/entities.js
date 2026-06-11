@@ -1,4 +1,4 @@
-// Doge Survivor — entities: player, enemy meme-coins, bullets, xp gems + spawning/drawing
+// Mame Survivor — entities: player, enemy meme-coins, bullets, xp gems + spawning/drawing
 const imgs = {};
 function loadImg(key, src){ const i=new Image(); i.src=src; imgs[key]=i; }
 loadImg('player','assets/doge-sprite.png');

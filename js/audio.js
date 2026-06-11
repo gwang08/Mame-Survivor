@@ -1,4 +1,4 @@
-// Doge Survivor — audio: gunshot SFX + looping chiptune background music
+// Mame Survivor — audio: gunshot SFX + looping chiptune background music
 // Uses the shared WebAudio context `AC` and `muted` flag from core.js.
 
 // ---- gunshot: noise "bang" + low thump ----

@@ -1,4 +1,4 @@
-// Doge Survivor — core engine: canvas, input, camera, particles, audio, helpers
+// Mame Survivor — core engine: canvas, input, camera, particles, audio, helpers
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 let VW = 0, VH = 0;

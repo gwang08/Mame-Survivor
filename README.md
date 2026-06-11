@@ -1,4 +1,4 @@
-# Doge Survivor 🐕🔥
+# Mame Survivor 🐕🔥
 
 A juicy **Vampire-Survivors–style** meme game. Your Doge is swarmed by other meme coins
 (**Pepe, Shib, Doge, Floki, Bonk**) — auto-fire, collect 💎 XP, level up, pick power-ups,

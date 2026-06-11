@@ -1,7 +1,7 @@
-// Doge Survivor — main loop, collisions, state machine, HUD, UI glue
+// Mame Survivor — main loop, collisions, state machine, HUD, UI glue
 const ST = { MENU:0, PLAY:1, LEVELUP:2, OVER:3 };
 let gs = ST.MENU, time=0, frame=0, spawnTimer=0, bossTimer=0;
-let best = +(localStorage.getItem('dogesurvivor_best')||0);
+let best = +(localStorage.getItem('mamesurvivor_best')||0);
 let selectedChar = 0;
 
 const $ = id => document.getElementById(id);
@@ -36,7 +36,7 @@ function levelUp(){
 
 function gameOver(){
   gs=ST.OVER; addShake(18); const survived=Math.floor(time);
-  if(survived>best){ best=survived; localStorage.setItem('dogesurvivor_best',best); }
+  if(survived>best){ best=survived; localStorage.setItem('mamesurvivor_best',best); }
   $('finalTime').textContent=fmt(survived);
   $('finalLv').textContent='Lv '+player.level+'  •  💀 '+player.kills;
   $('bestTime').textContent='Best: '+fmt(best);

@@ -1,4 +1,4 @@
-// Doge Survivor — upgrade pool offered on level up (pick 1 of 3)
+// Mame Survivor — upgrade pool offered on level up (pick 1 of 3)
 const UPGRADES = [
   {icon:'💥', name:'Damage +30%',     desc:'Hit harder',          apply:p=>p.damage=Math.round(p.damage*1.3)},
   {icon:'⚡', name:'Fire Rate +20%',  desc:'Shoot faster',        apply:p=>p.fireRate=Math.max(6,Math.round(p.fireRate*0.8))},
