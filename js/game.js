@@ -2,6 +2,7 @@
 const ST = { MENU:0, PLAY:1, LEVELUP:2, OVER:3 };
 let gs = ST.MENU, time=0, frame=0, spawnTimer=0, bossTimer=0;
 let best = +(localStorage.getItem('dogesurvivor_best')||0);
+let selectedChar = 0;
 
 const $ = id => document.getElementById(id);
 const fmt = s => { const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); };
@@ -11,6 +12,7 @@ function startGame(){
   Object.assign(player,{ x:0,y:0,speed:3,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
     fireCd:0,fireRate:32,damage:10,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,
     pickup:95,kills:0,iframe:0,regen:0,aim:0,muzzle:0 });
+  const ch = CHARACTERS[selectedChar]; player.skin = ch.key; ch.apply(player);  // skin + perk
   enemies.length=bullets.length=gems.length=particles.length=floaters.length=0;
   cam.x=cam.y=cam.shake=0; time=0; frame=0; spawnTimer=0; bossTimer=0;
   gs=ST.PLAY; hideOverlays();
@@ -156,6 +158,18 @@ function drawJoystick(){
 }
 
 // ---- boot ----
+function renderCharSelect(){
+  const box=$('charSelect'); box.innerHTML='';
+  CHARACTERS.forEach((c,i)=>{
+    const el=document.createElement('button');
+    el.className='char'+(i===selectedChar?' sel':'');
+    el.style.setProperty('--cg', c.glow);
+    el.innerHTML=`<img src="${c.file}" alt="${c.name}"><div class="cn">${c.name}</div><div class="cp">${c.perk}</div>`;
+    el.onclick=()=>{ selectedChar=i; renderCharSelect(); beep(1000,0.05,'square',0.03); };
+    box.appendChild(el);
+  });
+}
+renderCharSelect();
 $('startBtn').onclick=startGame;
 $('retryBtn').onclick=startGame;
 $('muteBtn').onclick=()=>{ $('muteBtn').textContent = toggleMute() ? '🔇' : '🔊'; };

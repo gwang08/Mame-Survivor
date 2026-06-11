@@ -2,13 +2,22 @@
 const imgs = {};
 function loadImg(key, src){ const i=new Image(); i.src=src; imgs[key]=i; }
 loadImg('player','assets/doge-sprite.png');
+loadImg('gold','assets/doge-gold.png');
 loadImg('boss','assets/enemy-boss-doge.png');
 loadImg('gun','assets/gun.png');
 ['pepe','shib','doge','floki','bonk'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
 
+// ---- playable characters (skin + a starting perk) ----
+const CHARACTERS = [
+  {key:'player', file:'assets/doge-sprite.png', name:'SHADOW DOGE', perk:'💥 +25% Damage',          glow:'#ffd45e',
+   apply:p=>{ p.damage=Math.round(p.damage*1.25); }},
+  {key:'gold',   file:'assets/doge-gold.png',   name:'GOLDEN DOGE', perk:'⚡ +15% Speed & Fire Rate', glow:'#ffe27a',
+   apply:p=>{ p.speed*=1.15; p.fireRate=Math.round(p.fireRate*0.85); }},
+];
+
 // ---- player ----
 const player = {
-  x:0, y:0, speed:3.0, size:56,
+  x:0, y:0, speed:3.0, size:56, skin:'player',
   hp:100, maxHp:100, xp:0, level:1, xpNext:5,
   fireCd:0, fireRate:32, damage:10, bullets:1, bulletSpeed:7, pierce:0, bulletSize:7, range:540,
   pickup:95, kills:0, iframe:0, regen:0, aim:0, muzzle:0,
@@ -77,7 +86,7 @@ function drawPlayer(){
   ctx.save();
   if(blink) ctx.globalAlpha=0.4;
   ctx.shadowColor='#ffd45e'; ctx.shadowBlur=22;
-  if(!drawImgCentered('player',X,Y,player.size)){
+  if(!drawImgCentered(player.skin,X,Y,player.size)){
     ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(X,Y,player.size/2,0,7); ctx.fill();
   }
   ctx.restore();

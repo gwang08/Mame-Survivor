@@ -34,6 +34,21 @@
   .card .ds{ font-size:13px; color:#bcd; line-height:1.4; }
   #levelup h2{ font-size:30px; color:var(--cyan); text-shadow:0 0 18px rgba(54,214,255,.6); }
   .stat{ font-size:clamp(22px,6vw,34px); font-weight:bold; }
+  /* menu panel + character select */
+  .panel{ background:linear-gradient(180deg,rgba(26,22,52,.72),rgba(12,11,26,.84)); border:1px solid #ffffff1f;
+    border-radius:24px; padding:26px 28px; max-width:560px; width:92%; display:flex; flex-direction:column;
+    align-items:center; gap:12px; box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 60px rgba(255,212,94,.08); backdrop-filter:blur(6px); }
+  .panel h1{ font-size:clamp(30px,8vw,58px); }
+  .pick{ margin-top:2px; letter-spacing:3px; font-size:12px; color:#9fb0ff; font-weight:bold; }
+  .chars{ display:flex; gap:16px; }
+  .char{ cursor:pointer; width:132px; background:#0f0e22; border:2px solid #ffffff22; border-radius:16px;
+    padding:12px 10px; display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff;
+    transition:transform .1s, border-color .1s, box-shadow .1s; }
+  .char img{ width:80px; height:80px; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+  .char .cn{ font-size:13px; font-weight:bold; color:var(--gold); letter-spacing:.5px; }
+  .char .cp{ font-size:11px; color:#bcd; }
+  .char:hover{ transform:translateY(-3px); }
+  .char.sel{ border-color:var(--cg); box-shadow:0 0 26px var(--cg); background:#16142e; }
   #hint{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:#fff6; font-size:12px; z-index:5; pointer-events:none; }
   #muteBtn{ position:fixed; top:46px; right:12px; z-index:8; width:42px; height:42px; font-size:20px; cursor:pointer;
     background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; }
@@ -45,11 +60,15 @@
 
 <!-- MENU -->
 <div class="overlay" id="menu">
-  <h1>DOGE SURVIVOR<span class="sub">SURVIVE THE MEME COINS 🐸🚀</span></h1>
-  <p class="tag">Your Doge is swarmed by rival meme coins (Pepe, Shib, Floki, Bonk...) wielding knives &amp; hammers. Auto-fire, grab 💎 to level up, pick power-ups, and survive as long as you can. Watch out for the <b>BOSS Doge</b>! 🔥</p>
-  <button class="btn" id="startBtn">▶ PLAY</button>
-  <div class="best" id="menuBest">Best: 0:00</div>
-  <div class="small">💻 WASD / Arrow keys to move &nbsp;•&nbsp; 📱 Drag to move</div>
+  <div class="panel">
+    <h1>DOGE SURVIVOR<span class="sub">SURVIVE THE MEME COINS 🐸🚀</span></h1>
+    <p class="tag">Swarmed by rival meme coins (Pepe, Shib, Floki, Bonk) wielding knives &amp; hammers. Auto-fire, grab 💎 to level up, pick power-ups — survive! Beware the <b>BOSS Doge</b> 🔥</p>
+    <div class="pick">CHOOSE YOUR DOGE</div>
+    <div id="charSelect" class="chars"></div>
+    <button class="btn" id="startBtn">▶ PLAY</button>
+    <div class="best" id="menuBest">Best: 0:00</div>
+    <div class="small">💻 WASD / Arrow keys &nbsp;•&nbsp; 📱 Drag to move</div>
+  </div>
 </div>
 
 <!-- LEVEL UP -->
