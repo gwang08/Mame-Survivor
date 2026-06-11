@@ -10,7 +10,7 @@ function hideOverlays(){ ['menu','over','levelup'].forEach(k=>$(k).style.display
 function startGame(){
   Object.assign(player,{ x:0,y:0,speed:3,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
     fireCd:0,fireRate:32,damage:10,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,
-    pickup:95,kills:0,iframe:0,regen:0 });
+    pickup:95,kills:0,iframe:0,regen:0,aim:0,muzzle:0 });
   enemies.length=bullets.length=gems.length=particles.length=floaters.length=0;
   cam.x=cam.y=cam.shake=0; time=0; frame=0; spawnTimer=0; bossTimer=0;
   gs=ST.PLAY; hideOverlays();
@@ -52,6 +52,8 @@ function update(){
 
   if(player.regen>0 && frame%6===0) player.hp=Math.min(player.maxHp,player.hp+player.regen/10);
   if(player.iframe>0) player.iframe--;
+  if(player.muzzle>0) player.muzzle--;
+  const tgt=nearestEnemy(); if(tgt) player.aim=Math.atan2(tgt.y-player.y, tgt.x-player.x);
   if(player.fireCd>0) player.fireCd--; else { fire(); player.fireCd=player.fireRate; }
 
   // spawning

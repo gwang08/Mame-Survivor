@@ -3,6 +3,7 @@ const imgs = {};
 function loadImg(key, src){ const i=new Image(); i.src=src; imgs[key]=i; }
 loadImg('player','assets/doge-sprite.png');
 loadImg('boss','assets/enemy-boss-doge.png');
+loadImg('gun','assets/gun.png');
 ['pepe','shib','doge','floki','bonk'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
 
 // ---- player ----
@@ -10,18 +11,18 @@ const player = {
   x:0, y:0, speed:3.0, size:56,
   hp:100, maxHp:100, xp:0, level:1, xpNext:5,
   fireCd:0, fireRate:32, damage:10, bullets:1, bulletSpeed:7, pierce:0, bulletSize:7, range:540,
-  pickup:95, kills:0, iframe:0, regen:0,
+  pickup:95, kills:0, iframe:0, regen:0, aim:0, muzzle:0,
 };
 
 const bullets = [], enemies = [], gems = [];
 
 // ---- enemy meme-coin archetypes ----
 const COIN_TYPES = [
-  {img:'pepe',  ring:'#3bd45e', hp:16, speed:1.7, dmg:7,  size:42, xp:1},
-  {img:'shib',  ring:'#f5a623', hp:14, speed:2.0, dmg:7,  size:40, xp:1},
-  {img:'doge',  ring:'#e8c04b', hp:30, speed:1.4, dmg:9,  size:46, xp:2},
-  {img:'floki', ring:'#ff7a3c', hp:55, speed:1.3, dmg:12, size:50, xp:4},
-  {img:'bonk',  ring:'#ffb028', hp:85, speed:1.1, dmg:14, size:54, xp:5},
+  {img:'pepe',  ring:'#3bd45e', hp:16, speed:1.7, dmg:7,  size:42, xp:1, weapon:'🔪'},
+  {img:'shib',  ring:'#f5a623', hp:14, speed:2.0, dmg:7,  size:40, xp:1, weapon:'🗡️'},
+  {img:'doge',  ring:'#e8c04b', hp:30, speed:1.4, dmg:9,  size:46, xp:2, weapon:'🔨'},
+  {img:'floki', ring:'#ff7a3c', hp:55, speed:1.3, dmg:12, size:50, xp:4, weapon:'🪓'},
+  {img:'bonk',  ring:'#ffb028', hp:85, speed:1.1, dmg:14, size:54, xp:5, weapon:'🔨'},
 ];
 
 function spawnEnemy(t, x, y, boss=false){
@@ -41,7 +42,7 @@ function spawnWave(elapsed){
 
 function spawnBoss(){
   const radius = Math.max(VW,VH)*0.62+80, ang=Math.random()*7;
-  spawnEnemy({img:'boss',ring:'#ff3030',hp:1400,speed:0.95,dmg:26,size:128,xp:60},
+  spawnEnemy({img:'boss',ring:'#ff3030',hp:1400,speed:0.95,dmg:26,size:128,xp:60,weapon:'⚔️'},
              player.x+Math.cos(ang)*radius, player.y+Math.sin(ang)*radius, true);
 }
 
@@ -59,6 +60,7 @@ function fire(){
     bullets.push({ x:player.x, y:player.y, vx:Math.cos(a)*player.bulletSpeed, vy:Math.sin(a)*player.bulletSpeed,
                    dmg:player.damage, pierce:player.pierce, size:player.bulletSize, life:80, hits:[] });
   }
+  player.muzzle = 5;             // flash frames
   beep(900,0.05,'square',0.025);
 }
 
@@ -69,11 +71,34 @@ function drawImgCentered(key, X, Y, size){
   ctx.drawImage(i, X-w/2, Y-h/2, w, h); return true;
 }
 function drawPlayer(){
+  const X=sx(player.x), Y=sy(player.y);
+  const blink = player.iframe>0 && Math.floor(player.iframe/3)%2;
+  // dog body
   ctx.save();
-  if(player.iframe>0 && Math.floor(player.iframe/3)%2) ctx.globalAlpha=0.4;
+  if(blink) ctx.globalAlpha=0.4;
   ctx.shadowColor='#ffd45e'; ctx.shadowBlur=22;
-  if(!drawImgCentered('player',sx(player.x),sy(player.y),player.size)){
-    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(sx(player.x),sy(player.y),player.size/2,0,7); ctx.fill();
+  if(!drawImgCentered('player',X,Y,player.size)){
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(X,Y,player.size/2,0,7); ctx.fill();
+  }
+  ctx.restore();
+  // gun aiming toward nearest enemy
+  drawGun(X, Y+6, player.aim, blink);
+}
+
+function drawGun(X, Y, aim, blink){
+  const g=imgs.gun; if(!g||!g.complete) return;
+  const gw=54, scale=gw/g.width, gripX=95, gripY=100; // pivot near grip in source px
+  const left = Math.cos(aim)<0;                        // aiming left -> flip vertically
+  ctx.save();
+  if(blink) ctx.globalAlpha=0.5;
+  ctx.translate(X, Y); ctx.rotate(aim); if(left) ctx.scale(1,-1);
+  ctx.shadowColor='#36d6ff'; ctx.shadowBlur=8;
+  ctx.drawImage(g, -gripX*scale, -gripY*scale, g.width*scale, g.height*scale);
+  // muzzle flash at barrel tip
+  if(player.muzzle>0){
+    const mx=(g.width-18)*scale - gripX*scale, my=(98)*scale - gripY*scale;
+    ctx.fillStyle='#fff6a0'; ctx.shadowColor='#ffd45e'; ctx.shadowBlur=20;
+    ctx.beginPath(); ctx.arc(mx, my, 6+player.muzzle*1.6, 0, 7); ctx.fill();
   }
   ctx.restore();
 }
@@ -85,6 +110,15 @@ function drawEnemy(e){
   if(e.hit>0){ ctx.filter='brightness(2.2)'; }
   drawImgCentered(e.img, X, Y, e.size);
   ctx.restore();
+  // weapon (knife / hammer / axe) on the side facing the player, with a little swing
+  if(e.weapon){
+    const toP = Math.atan2(player.y-e.y, player.x-e.x);
+    const swing = Math.sin(frame*0.18 + e.x*0.05) * 0.4;
+    const wx = X + Math.cos(toP)*e.size*0.5, wy = Y + Math.sin(toP)*e.size*0.35;
+    ctx.save(); ctx.translate(wx, wy); ctx.rotate(toP + swing + 0.6);
+    ctx.font=(e.boss?40:Math.round(e.size*0.55))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(e.weapon, 0, 0); ctx.restore();
+  }
   if(e.boss || e.hp<e.maxHp){
     const w=e.size, h=e.boss?6:4, by=Y-e.size*0.62-h-2;
     ctx.fillStyle='#000a'; ctx.fillRect(X-w/2,by,w,h);
