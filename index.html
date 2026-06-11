@@ -49,6 +49,24 @@
   .char .cp{ font-size:11px; color:#bcd; }
   .char:hover{ transform:translateY(-3px); }
   .char.sel{ border-color:var(--cg); box-shadow:0 0 26px var(--cg); background:#16142e; }
+  /* ===== HODL meme-poster theme (menu screen only) ===== */
+  #menu{ background:#ffd400; }
+  #menu .doodle{ position:absolute; inset:0; overflow:hidden; pointer-events:none; opacity:.16; color:#1a1a1a; font-weight:900; z-index:0; }
+  #menu .doodle span{ position:absolute; white-space:nowrap; }
+  #menu .panel{ position:relative; z-index:1; background:#fff; border:5px solid #1a1a1a; border-radius:28px;
+    box-shadow:12px 14px 0 #1a1a1a; backdrop-filter:none; gap:14px; max-width:600px; }
+  #menu .panel h1{ color:#1a1a1a; -webkit-text-stroke:2px #1a1a1a; text-shadow:4px 4px 0 #ffd400; }
+  #menu .panel h1 .sub{ color:#e6005c; text-shadow:none; }
+  #menu .tag{ color:#444; }
+  #menu .pick{ color:#e6005c; }
+  #menu .char{ background:#fff8d6; border:4px solid #1a1a1a; border-radius:18px; box-shadow:5px 6px 0 #1a1a1a; color:#1a1a1a; }
+  #menu .char .cn{ color:#1a1a1a; }
+  #menu .char .cp{ color:#444; }
+  #menu .char.sel{ background:#ffd400; border-color:#1a1a1a; box-shadow:7px 8px 0 #1a1a1a; transform:translateY(-2px); }
+  #menu .btn{ background:#ffd400; color:#1a1a1a; border:4px solid #1a1a1a; border-radius:16px; box-shadow:6px 7px 0 #1a1a1a; }
+  #menu .btn:active{ transform:translate(3px,3px); box-shadow:2px 3px 0 #1a1a1a; }
+  #menu .best{ background:#1a1a1a; color:#ffd400; padding:5px 18px; border-radius:20px; }
+  #menu .small{ color:#555; }
   #hint{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:#fff6; font-size:12px; z-index:5; pointer-events:none; }
   #muteBtn{ position:fixed; top:46px; right:12px; z-index:8; width:42px; height:42px; font-size:20px; cursor:pointer;
     background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; }
@@ -60,6 +78,14 @@
 
 <!-- MENU -->
 <div class="overlay" id="menu">
+  <div class="doodle">
+    <span style="top:8%;left:4%;font-size:54px;transform:rotate(-12deg)">🚀 HODL</span>
+    <span style="top:15%;right:5%;font-size:48px;transform:rotate(8deg)">₿ TO THE MOON</span>
+    <span style="bottom:10%;left:6%;font-size:58px;transform:rotate(6deg)">HODL 💎🙌</span>
+    <span style="bottom:20%;right:8%;font-size:44px;transform:rotate(-10deg)">🚀 ₿</span>
+    <span style="top:46%;left:2%;font-size:40px">₿₿₿</span>
+    <span style="top:62%;right:3%;font-size:42px;transform:rotate(14deg)">🚀🚀</span>
+  </div>
   <div class="panel">
     <h1>MAME SURVIVOR<span class="sub">SURVIVE THE MEME COINS 🐸🚀</span></h1>
     <p class="tag">Swarmed by rival meme coins (Pepe, Shib, Floki, Bonk) wielding knives &amp; hammers. Auto-fire, grab 💎 to level up, pick power-ups — survive! Beware the <b>BOSS Doge</b> 🔥</p>
