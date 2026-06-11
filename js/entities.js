@@ -2,17 +2,17 @@
 const imgs = {};
 function loadImg(key, src){ const i=new Image(); i.src=src; imgs[key]=i; }
 loadImg('player','assets/doge-sprite.png');
-loadImg('gold','assets/doge-gold.png');
+loadImg('mame','assets/doge-mame.png');
 loadImg('boss','assets/enemy-boss-doge.png');
 loadImg('gun','assets/gun.png');
 ['pepe','shib','doge','floki','bonk'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
 
-// ---- playable characters (skin + a starting perk) ----
+// ---- playable characters (distinct sprite + a starting perk) ----
 const CHARACTERS = [
-  {key:'player', file:'assets/doge-sprite.png', name:'SHADOW DOGE', perk:'💥 +25% Damage',          glow:'#ffd45e',
+  {key:'player', file:'assets/doge-sprite.png', name:'SHADOW DOGE', perk:'💥 +25% Damage',     glow:'#ffd45e',
    apply:p=>{ p.damage=Math.round(p.damage*1.25); }},
-  {key:'gold',   file:'assets/doge-gold.png',   name:'GOLDEN DOGE', perk:'⚡ +15% Speed & Fire Rate', glow:'#ffe27a',
-   apply:p=>{ p.speed*=1.15; p.fireRate=Math.round(p.fireRate*0.85); }},
+  {key:'mame',   file:'assets/doge-mame.png',   name:'MAME DOGE',   perk:'❤️ +40 HP & Regen', glow:'#4be1ff',
+   apply:p=>{ p.maxHp+=40; p.hp=p.maxHp; p.regen+=0.5; }},
 ];
 
 // ---- player ----
