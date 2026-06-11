@@ -1,0 +1,103 @@
+// Doge Survivor — entities: player, enemy meme-coins, bullets, xp gems + spawning/drawing
+const imgs = {};
+function loadImg(key, src){ const i=new Image(); i.src=src; imgs[key]=i; }
+loadImg('player','assets/doge-sprite.png');
+loadImg('boss','assets/enemy-boss-doge.png');
+['pepe','shib','doge','floki','bonk'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
+
+// ---- player ----
+const player = {
+  x:0, y:0, speed:3.0, size:56,
+  hp:100, maxHp:100, xp:0, level:1, xpNext:5,
+  fireCd:0, fireRate:32, damage:10, bullets:1, bulletSpeed:7, pierce:0, bulletSize:7, range:540,
+  pickup:95, kills:0, iframe:0, regen:0,
+};
+
+const bullets = [], enemies = [], gems = [];
+
+// ---- enemy meme-coin archetypes ----
+const COIN_TYPES = [
+  {img:'pepe',  ring:'#3bd45e', hp:16, speed:1.7, dmg:7,  size:42, xp:1},
+  {img:'shib',  ring:'#f5a623', hp:14, speed:2.0, dmg:7,  size:40, xp:1},
+  {img:'doge',  ring:'#e8c04b', hp:30, speed:1.4, dmg:9,  size:46, xp:2},
+  {img:'floki', ring:'#ff7a3c', hp:55, speed:1.3, dmg:12, size:50, xp:4},
+  {img:'bonk',  ring:'#ffb028', hp:85, speed:1.1, dmg:14, size:54, xp:5},
+];
+
+function spawnEnemy(t, x, y, boss=false){
+  enemies.push({ ...t, x, y, maxHp:t.hp, hp:t.hp, hit:0, boss });
+}
+
+function spawnWave(elapsed){
+  if(enemies.length > 260) return;
+  const radius = Math.max(VW,VH)*0.62 + 80, ang = Math.random()*7;
+  const x = player.x + Math.cos(ang)*radius, y = player.y + Math.sin(ang)*radius;
+  const hard = elapsed/60; // minutes survived
+  // tougher coins appear more often over time
+  let pool = COIN_TYPES.slice(0, Math.min(COIN_TYPES.length, 2 + Math.floor(hard*2)+1));
+  const t = pool[Math.floor(Math.random()*pool.length)];
+  spawnEnemy({...t, hp: Math.round(t.hp*(1+hard*0.55))}, x, y);
+}
+
+function spawnBoss(){
+  const radius = Math.max(VW,VH)*0.62+80, ang=Math.random()*7;
+  spawnEnemy({img:'boss',ring:'#ff3030',hp:1400,speed:0.95,dmg:26,size:128,xp:60},
+             player.x+Math.cos(ang)*radius, player.y+Math.sin(ang)*radius, true);
+}
+
+// ---- auto weapon ----
+function nearestEnemy(){
+  let best=null, bd=player.range*player.range;
+  for(const e of enemies){ const d=dist2(e.x,e.y,player.x,player.y); if(d<bd){ bd=d; best=e; } }
+  return best;
+}
+function fire(){
+  const target = nearestEnemy(); if(!target) return;
+  const base = Math.atan2(target.y-player.y, target.x-player.x), spread=0.17;
+  for(let i=0;i<player.bullets;i++){
+    const a = base + (i-(player.bullets-1)/2)*spread;
+    bullets.push({ x:player.x, y:player.y, vx:Math.cos(a)*player.bulletSpeed, vy:Math.sin(a)*player.bulletSpeed,
+                   dmg:player.damage, pierce:player.pierce, size:player.bulletSize, life:80, hits:[] });
+  }
+  beep(900,0.05,'square',0.025);
+}
+
+// ---- drawing ----
+function drawImgCentered(key, X, Y, size){
+  const i=imgs[key]; if(!i||!i.complete||!i.width) return false;
+  const ar=i.width/i.height, h=size, w=size*ar;
+  ctx.drawImage(i, X-w/2, Y-h/2, w, h); return true;
+}
+function drawPlayer(){
+  ctx.save();
+  if(player.iframe>0 && Math.floor(player.iframe/3)%2) ctx.globalAlpha=0.4;
+  ctx.shadowColor='#ffd45e'; ctx.shadowBlur=22;
+  if(!drawImgCentered('player',sx(player.x),sy(player.y),player.size)){
+    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(sx(player.x),sy(player.y),player.size/2,0,7); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawEnemy(e){
+  const X=sx(e.x), Y=sy(e.y);
+  if(X<-80||X>VW+80||Y<-80||Y>VH+80) return; // cull off-screen
+  ctx.save();
+  ctx.shadowColor=e.ring; ctx.shadowBlur=e.boss?32:14;
+  if(e.hit>0){ ctx.filter='brightness(2.2)'; }
+  drawImgCentered(e.img, X, Y, e.size);
+  ctx.restore();
+  if(e.boss || e.hp<e.maxHp){
+    const w=e.size, h=e.boss?6:4, by=Y-e.size*0.62-h-2;
+    ctx.fillStyle='#000a'; ctx.fillRect(X-w/2,by,w,h);
+    ctx.fillStyle=e.boss?'#ff3b3b':'#5ed36b'; ctx.fillRect(X-w/2,by,w*clamp(e.hp/e.maxHp,0,1),h);
+  }
+}
+function drawBullet(b){
+  ctx.save(); ctx.shadowColor='#ffd45e'; ctx.shadowBlur=14; ctx.fillStyle='#fff2a8';
+  ctx.beginPath(); ctx.arc(sx(b.x),sy(b.y),b.size,0,7); ctx.fill(); ctx.restore();
+}
+function drawGem(g){
+  const X=sx(g.x), Y=sy(g.y), s=g.big?7:5;
+  ctx.save(); ctx.shadowColor='#36d6ff'; ctx.shadowBlur=10; ctx.fillStyle='#36d6ff';
+  ctx.beginPath(); ctx.moveTo(X,Y-s); ctx.lineTo(X+s,Y); ctx.lineTo(X,Y+s); ctx.lineTo(X-s,Y); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}

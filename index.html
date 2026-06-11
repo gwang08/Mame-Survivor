@@ -3,251 +3,72 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Flappy Doge 🚀 — HODL to the Moon</title>
-<meta name="description" content="Flappy Doge — tap to fly, dodge the rockets, HODL to the moon!" />
+<title>Doge Survivor 🐕🔥 — Survive the Meme Coins</title>
+<meta name="description" content="Doge Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
 <style>
-  :root { --gold:#f5b50a; --ink:#1a1a2e; }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { height:100%; overflow:hidden; background:#0d0d1a; font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif; }
-  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
-  canvas { display:block; touch-action:none; box-shadow:0 0 60px rgba(245,181,10,.25); }
-  #hint { position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#fff8; font-size:13px; letter-spacing:.5px; pointer-events:none; }
+  :root{ --gold:#ffd45e; --cyan:#36d6ff; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html,body{ height:100%; overflow:hidden; background:#0c0c18; font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif; color:#fff; }
+  #game{ display:block; position:fixed; inset:0; touch-action:none; }
+  .overlay{ position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; background:radial-gradient(circle at center, rgba(20,16,40,.6), rgba(5,5,12,.92)); z-index:10; gap:18px; padding:24px; }
+  h1{ font-size:clamp(34px,9vw,68px); letter-spacing:1px; color:var(--gold);
+    text-shadow:0 0 24px rgba(255,212,94,.6), 0 4px 0 #b8860b; }
+  h1 .sub{ display:block; font-size:clamp(13px,3.5vw,18px); color:#cbd2ff; letter-spacing:3px; margin-top:6px; text-shadow:none; }
+  .tag{ color:#aab; max-width:520px; line-height:1.6; font-size:clamp(13px,3.6vw,16px); }
+  .btn{ margin-top:6px; padding:16px 48px; font-size:22px; font-weight:bold; cursor:pointer; color:#1a1208;
+    background:linear-gradient(180deg,#ffe27a,#f5b50a); border:none; border-radius:14px;
+    box-shadow:0 6px 0 #b8860b, 0 12px 30px rgba(255,212,94,.35); transition:transform .08s; }
+  .btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #b8860b; }
+  .best{ color:var(--gold); font-weight:bold; font-size:18px; }
+  .small{ color:#889; font-size:13px; }
+  /* level-up cards */
+  #cards{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .card{ width:170px; min-height:180px; cursor:pointer; color:#fff; background:linear-gradient(180deg,#1a1838,#0f0e22);
+    border:2px solid var(--cyan); border-radius:16px; padding:20px 14px; display:flex; flex-direction:column; gap:10px;
+    align-items:center; justify-content:center; box-shadow:0 0 24px rgba(54,214,255,.25); transition:transform .1s, box-shadow .1s; }
+  .card:active{ transform:scale(.96); }
+  .card:hover{ box-shadow:0 0 36px rgba(54,214,255,.5); border-color:#7fe9ff; }
+  .card .ic{ font-size:46px; }
+  .card .nm{ font-size:17px; font-weight:bold; color:var(--gold); }
+  .card .ds{ font-size:13px; color:#bcd; line-height:1.4; }
+  #levelup h2{ font-size:30px; color:var(--cyan); text-shadow:0 0 18px rgba(54,214,255,.6); }
+  .stat{ font-size:clamp(22px,6vw,34px); font-weight:bold; }
+  #hint{ position:fixed; bottom:10px; left:0; right:0; text-align:center; color:#fff6; font-size:12px; z-index:5; pointer-events:none; }
 </style>
 </head>
 <body>
-<div id="wrap"><canvas id="c"></canvas></div>
-<div id="hint">TAP / CLICK / SPACE to fly • HODL 🚀</div>
-<script>
-const cv = document.getElementById('c');
-const ctx = cv.getContext('2d');
+<canvas id="game"></canvas>
 
-// ---- virtual resolution (portrait) ----
-const W = 420, H = 720;
-cv.width = W; cv.height = H;
-function fit(){
-  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
-  cv.style.width = (W * s) + 'px';
-  cv.style.height = (H * s) + 'px';
-}
-window.addEventListener('resize', fit); fit();
+<!-- MENU -->
+<div class="overlay" id="menu">
+  <h1>DOGE SURVIVOR<span class="sub">SURVIVE THE MEME COINS 🐸🚀</span></h1>
+  <p class="tag">Con chó của bạn bị bủa vây bởi đám meme coin (Pepe, Shib, Floki, Bonk...). Tự động bắn, nhặt 💎 lên level, chọn skill, sống càng lâu càng max kèo. Cẩn thận <b>BOSS chó đội nón</b>! 🔥</p>
+  <button class="btn" id="startBtn">▶ PLAY</button>
+  <div class="best" id="menuBest">Best: 0:00</div>
+  <div class="small">💻 WASD / phím mũi tên di chuyển &nbsp;•&nbsp; 📱 kéo để di chuyển</div>
+</div>
 
-// ---- assets ----
-const doge = new Image();
-doge.src = 'assets/doge-sprite.png';
-let dogeReady = false;
-doge.onload = () => dogeReady = true;
+<!-- LEVEL UP -->
+<div class="overlay" id="levelup" style="display:none">
+  <h2>⬆ LEVEL UP — chọn power-up</h2>
+  <div id="cards"></div>
+</div>
 
-// ---- audio (tiny WebAudio beeps) ----
-let AC;
-function beep(freq, dur, type='square', vol=0.05){
-  try{
-    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
-    const o = AC.createOscillator(), g = AC.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.value = vol; o.connect(g); g.connect(AC.destination);
-    o.start(); o.frequency.exponentialRampToValueAtTime(freq*0.6, AC.currentTime+dur);
-    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
-    o.stop(AC.currentTime + dur);
-  }catch(e){}
-}
+<!-- GAME OVER -->
+<div class="overlay" id="over" style="display:none">
+  <h1 style="color:#ff5b7a;text-shadow:0 0 24px rgba(255,91,122,.6)">GAME OVER</h1>
+  <div class="stat">⏱ <span id="finalTime">0:00</span></div>
+  <div id="finalLv" class="tag"></div>
+  <div class="best" id="bestTime">Best: 0:00</div>
+  <button class="btn" id="retryBtn">↻ RETRY</button>
+</div>
 
-// ---- game state ----
-const STATE = { READY:0, PLAY:1, OVER:2 };
-let state = STATE.READY;
-let best = +(localStorage.getItem('flappydoge_best') || 0);
-let score = 0, frame = 0;
+<div id="hint">HODL to the moon 🚀 — github.com/gwang08/FlappyDoge</div>
 
-const bird = { x: 120, y: H/2, r: 26, vy: 0, rot: 0 };
-const GRAV = 0.45, FLAP = -7.6;
-
-const pipes = [];
-const GAP = 190, PW = 74, SPEED = 2.6, SPAWN = 95;
-
-// decorative floating coins / mountains
-const coins = [];
-const stars = Array.from({length:40}, () => ({ x:Math.random()*W, y:Math.random()*H*0.6, s:Math.random()*1.6+0.4 }));
-
-function reset(){
-  bird.y = H/2; bird.vy = 0; bird.rot = 0;
-  pipes.length = 0; coins.length = 0;
-  score = 0; frame = 0;
-}
-
-function flap(){
-  if (state === STATE.READY){ state = STATE.PLAY; reset(); }
-  if (state === STATE.PLAY){ bird.vy = FLAP; bird.rot = -0.5; beep(620,0.08); }
-  if (state === STATE.OVER && cooldown<=0){ state = STATE.READY; }
-}
-let cooldown = 0;
-
-// input
-function onTap(e){ e.preventDefault(); flap(); }
-window.addEventListener('mousedown', onTap);
-window.addEventListener('touchstart', onTap, {passive:false});
-window.addEventListener('keydown', e => { if(e.code==='Space'||e.code==='ArrowUp'){ e.preventDefault(); flap(); }});
-
-// ---- spawn pipe ----
-function spawnPipe(){
-  const margin = 80;
-  const top = margin + Math.random() * (H - GAP - margin*2 - 90);
-  pipes.push({ x: W + 10, top, bottom: top + GAP, passed:false, kind: Math.random()<0.5?'btc':'rkt' });
-}
-
-// ---- update ----
-function update(){
-  frame++;
-  if (cooldown>0) cooldown--;
-
-  if (state === STATE.PLAY){
-    bird.vy += GRAV;
-    bird.y += bird.vy;
-    bird.rot = Math.max(-0.5, Math.min(1.4, bird.vy * 0.06));
-
-    if (frame % SPAWN === 0) spawnPipe();
-
-    for (const p of pipes){
-      p.x -= SPEED;
-      if (!p.passed && p.x + PW < bird.x){
-        p.passed = true; score++; beep(880,0.1,'triangle');
-        if (score>0 && score%5===0) beep(1175,0.18,'sine',0.06);
-        // pop a coin
-        coins.push({ x:bird.x, y:bird.y, vy:-3, life:30 });
-      }
-    }
-    while (pipes.length && pipes[0].x < -PW-20) pipes.shift();
-
-    // collision
-    const b = bird;
-    if (b.y + b.r > H-80 || b.y - b.r < 0) gameOver();
-    for (const p of pipes){
-      if (b.x + b.r*0.7 > p.x && b.x - b.r*0.7 < p.x + PW){
-        if (b.y - b.r*0.7 < p.top || b.y + b.r*0.7 > p.bottom) gameOver();
-      }
-    }
-  } else if (state === STATE.READY){
-    bird.y = H/2 + Math.sin(frame*0.05)*12; // idle bob
-  } else if (state === STATE.OVER){
-    if (bird.y + bird.r < H-80){ bird.vy += GRAV; bird.y += bird.vy; bird.rot += 0.05; }
-  }
-
-  for (const c of coins){ c.y += c.vy; c.vy += 0.18; c.life--; }
-  for (let i=coins.length-1;i>=0;i--) if(coins[i].life<=0) coins.splice(i,1);
-}
-
-function gameOver(){
-  if (state!==STATE.PLAY) return;
-  state = STATE.OVER; cooldown = 35; beep(200,0.3,'sawtooth',0.07);
-  if (score > best){ best = score; localStorage.setItem('flappydoge_best', best); }
-}
-
-// ---- draw helpers ----
-function sky(){
-  const g = ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#1b2a6b'); g.addColorStop(0.45,'#7b5cb8');
-  g.addColorStop(0.7,'#f08a5d'); g.addColorStop(1,'#ffd45e');
-  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  // sun
-  ctx.fillStyle = 'rgba(255,240,180,.95)';
-  ctx.beginPath(); ctx.arc(W*0.5, H*0.62, 70, 0, 7); ctx.fill();
-  // stars
-  ctx.fillStyle = '#ffffffaa';
-  for (const s of stars){ ctx.globalAlpha = (Math.sin(frame*0.05+s.x)*0.4+0.6)*0.7; ctx.fillRect(s.x,s.y,s.s,s.s); }
-  ctx.globalAlpha = 1;
-  // mountains
-  ctx.fillStyle = '#3a2c5e';
-  ctx.beginPath(); ctx.moveTo(0,H*0.72);
-  for(let x=0;x<=W;x+=70){ ctx.lineTo(x, H*0.72 - (x%140===0?70:30)); }
-  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
-}
-
-function ground(){
-  ctx.fillStyle = '#2a7d3a'; ctx.fillRect(0,H-80,W,80);
-  ctx.fillStyle = '#226632';
-  const off = (frame*SPEED)% 40;
-  for(let x=-40;x<W+40;x+=40){ ctx.fillRect(x-off, H-80, 20, 80); }
-  ctx.fillStyle = '#1c5429'; ctx.fillRect(0,H-80,W,6);
-}
-
-function drawPipe(p){
-  // body
-  const grad = ctx.createLinearGradient(p.x,0,p.x+PW,0);
-  grad.addColorStop(0,'#0f1c4d'); grad.addColorStop(0.5,'#27408b'); grad.addColorStop(1,'#0f1c4d');
-  function seg(y,h){
-    ctx.fillStyle = grad; ctx.fillRect(p.x,y,PW,h);
-    ctx.fillStyle = '#f5b50a'; ctx.fillRect(p.x,y,PW,4); ctx.fillRect(p.x,y+h-4,PW,4);
-  }
-  seg(0, p.top);                 // top pipe
-  seg(p.bottom, H-80-p.bottom);  // bottom pipe
-  // emblem on caps
-  ctx.font = 'bold 30px Trebuchet MS'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  const icon = p.kind==='btc' ? '₿' : '🚀';
-  ctx.fillStyle = p.kind==='btc' ? '#f5b50a' : '#fff';
-  ctx.fillText(icon, p.x+PW/2, p.top-22);
-  ctx.fillText(icon, p.x+PW/2, p.bottom+22);
-}
-
-function drawBird(){
-  ctx.save();
-  ctx.translate(bird.x, bird.y);
-  ctx.rotate(bird.rot);
-  const size = 64;
-  if (dogeReady){
-    const ar = doge.width/doge.height;
-    const h = size, w = h*ar;
-    ctx.drawImage(doge, -w/2, -h/2, w, h);
-  } else {
-    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(0,0,bird.r,0,7); ctx.fill();
-  }
-  ctx.restore();
-}
-
-function drawCoins(){
-  ctx.font='bold 22px Trebuchet MS'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  for(const c of coins){ ctx.globalAlpha=Math.max(0,c.life/30); ctx.fillText('🪙',c.x,c.y); }
-  ctx.globalAlpha=1;
-}
-
-function panel(title, sub, big){
-  ctx.fillStyle='rgba(15,12,30,.62)'; ctx.fillRect(0,0,W,H);
-  ctx.textAlign='center';
-  ctx.fillStyle='#f5b50a'; ctx.font='bold 52px Trebuchet MS';
-  ctx.fillText(title, W/2, H*0.32);
-  if(big!=null){
-    ctx.fillStyle='#fff'; ctx.font='bold 90px Trebuchet MS';
-    ctx.fillText(big, W/2, H*0.46);
-  }
-  ctx.fillStyle='#fff'; ctx.font='20px Trebuchet MS';
-  ctx.fillText(sub, W/2, H*0.58);
-}
-
-function hud(){
-  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.fillStyle='#fff'; ctx.font='bold 64px Trebuchet MS';
-  ctx.lineWidth=6; ctx.strokeStyle='#1a1a2e';
-  ctx.strokeText(score, W/2, 100); ctx.fillText(score, W/2, 100);
-}
-
-// ---- main loop ----
-function draw(){
-  sky();
-  for (const p of pipes) drawPipe(p);
-  ground();
-  drawCoins();
-  drawBird();
-
-  if (state === STATE.PLAY) hud();
-  if (state === STATE.READY){
-    ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 46px Trebuchet MS';
-    ctx.fillText('FLAPPY DOGE', W/2, H*0.22);
-    ctx.font='20px Trebuchet MS'; ctx.fillStyle='#fff';
-    ctx.fillText('TAP to fly 🚀  •  Best: '+best, W/2, H*0.28);
-  }
-  if (state === STATE.OVER){
-    panel('GAME OVER', (score>=best?'🏆 NEW BEST!  ':'Best: '+best+'   ')+'Tap to retry', score);
-  }
-}
-
-(function loop(){ update(); draw(); requestAnimationFrame(loop); })();
-</script>
+<script src="js/core.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/upgrades.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>
