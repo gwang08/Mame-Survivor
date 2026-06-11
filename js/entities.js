@@ -112,10 +112,12 @@ function drawEnemy(e){
   ctx.restore();
   // weapon (knife / hammer / axe) on the side facing the player, with a little swing
   if(e.weapon){
-    const toP = Math.atan2(player.y-e.y, player.x-e.x);
-    const swing = Math.sin(frame*0.18 + e.x*0.05) * 0.45;
-    const wx = X + Math.cos(toP)*e.size*0.6, wy = Y + Math.sin(toP)*e.size*0.5;
-    ctx.save(); ctx.translate(wx, wy); ctx.rotate(toP + swing + 0.6);
+    const left = player.x < e.x;                              // player on enemy's left?
+    const swing = Math.sin(frame*0.18 + e.x*0.05) * 0.35;     // small upright wobble
+    const wx = X + (left?-1:1)*e.size*0.55, wy = Y + e.size*0.12;
+    ctx.save(); ctx.translate(wx, wy);
+    if(left) ctx.scale(-1,1);                                 // mirror to face the player (stays upright)
+    ctx.rotate(swing);
     ctx.shadowColor='#000'; ctx.shadowBlur=6;
     ctx.font=(e.boss?78:Math.round(e.size*1.05))+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(e.weapon, 0, 0); ctx.restore();
