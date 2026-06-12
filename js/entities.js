@@ -14,7 +14,7 @@ const BOSS_ROSTER = [
   {img:'boss-bnb',       name:'BNB CHAIN KING', ring:'#f5b50a'},
 ];
 BOSS_ROSTER.forEach(b=>loadImg(b.img,'assets/'+b.img+'.png'));
-['pepe','shib','doge','floki','bonk'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
+['wif','bonk','peanut','popcat','sahur'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
 
 // ---- playable characters (distinct sprite + a starting perk) ----
 const CHARACTERS = [
@@ -34,13 +34,13 @@ const player = {
 
 const bullets = [], enemies = [], gems = [];
 
-// ---- enemy meme-coin archetypes ----
+// ---- enemy meme-coin archetypes (full-body sprites with baked-in weapons) ----
 const COIN_TYPES = [
-  {img:'pepe',  ring:'#3bd45e', hp:16, speed:1.7, dmg:7,  size:42, xp:1, weapon:'🔪'},
-  {img:'shib',  ring:'#f5a623', hp:14, speed:2.0, dmg:7,  size:40, xp:1, weapon:'🗡️'},
-  {img:'doge',  ring:'#e8c04b', hp:30, speed:1.4, dmg:9,  size:46, xp:2, weapon:'🔨'},
-  {img:'floki', ring:'#ff7a3c', hp:55, speed:1.3, dmg:12, size:50, xp:4, weapon:'🪓'},
-  {img:'bonk',  ring:'#ffb028', hp:85, speed:1.1, dmg:14, size:54, xp:5, weapon:'🔨'},
+  {img:'wif',    name:'WIF',             ring:'#ff9ad1', hp:16, speed:1.9, dmg:7,  size:54, xp:1},
+  {img:'peanut', name:'PEANUT',          ring:'#d08a48', hp:22, speed:1.7, dmg:8,  size:54, xp:1},
+  {img:'popcat', name:'POPCAT',          ring:'#f0d8b0', hp:34, speed:1.5, dmg:9,  size:58, xp:2},
+  {img:'bonk',   name:'BONK',            ring:'#ffb028', hp:58, speed:1.4, dmg:12, size:60, xp:4},
+  {img:'sahur',  name:'TUNG TUNG SAHUR', ring:'#b8884a', hp:92, speed:1.2, dmg:14, size:66, xp:5},
 ];
 
 function spawnEnemy(t, x, y, boss=false){
@@ -157,6 +157,16 @@ function drawEnemy(e){
     const w=e.size, h=e.boss?6:4, by=Y-e.size*0.62-h-2;
     ctx.fillStyle='#000a'; ctx.fillRect(X-w/2,by,w,h);
     ctx.fillStyle=e.boss?'#ff3b3b':'#5ed36b'; ctx.fillRect(X-w/2,by,w*clamp(e.hp/e.maxHp,0,1),h);
+  }
+  // monster name above the head
+  if(e.name){
+    const ny = Y - e.size*0.62 - (e.boss?11:7);
+    ctx.save();
+    ctx.font = 'bold '+(e.boss?14:10)+'px Trebuchet MS';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,0.85)'; ctx.strokeText(e.name, X, ny);
+    ctx.fillStyle=e.ring||'#fff'; ctx.fillText(e.name, X, ny);
+    ctx.restore();
   }
 }
 function drawBullet(b){
