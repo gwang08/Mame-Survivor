@@ -371,26 +371,19 @@ function buildStageSelect(){
   const W=Math.min(VW*0.96, 600), gapY=140, padTop=46, padBot=120;
   const H=padTop+(TOTAL_STAGES-1)*gapY+padBot;
   map.style.width=W+'px'; map.style.height=H+'px';
-  const cx=W/2, amp=W*0.27;
-  const pos=n=>({x:cx+Math.sin(n*0.6)*amp, y:padTop+(n-1)*gapY});
-  // forest scenery (vector trees / bushes / flowers)
-  const tree=(x,y,s)=>`<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(${s})"><ellipse cx="0" cy="42" rx="32" ry="8" fill="#00000022"/><rect x="-7" y="4" width="14" height="40" rx="6" fill="#7a4a25"/><circle cx="0" cy="-14" r="30" fill="#3f9b3f"/><circle cx="-23" cy="6" r="23" fill="#49ab49"/><circle cx="23" cy="6" r="23" fill="#49ab49"/><circle cx="0" cy="-2" r="27" fill="#5cc45c"/><circle cx="-10" cy="-16" r="9" fill="#86e086" opacity=".7"/></g>`;
-  const bush=(x,y,s)=>`<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(${s})"><ellipse cx="0" cy="15" rx="30" ry="7" fill="#0000001a"/><circle cx="-16" cy="0" r="15" fill="#3f9b3f"/><circle cx="16" cy="0" r="15" fill="#3f9b3f"/><circle cx="0" cy="-6" r="19" fill="#4fb84f"/><circle cx="0" cy="0" r="13" fill="#69cc69"/></g>`;
-  const flower=(x,y,c)=>{ let s=''; for(let a=0;a<360;a+=72) s+=`<circle cx="${(Math.cos(a*Math.PI/180)*6).toFixed(1)}" cy="${(Math.sin(a*Math.PI/180)*6).toFixed(1)}" r="5" fill="${c}"/>`; return `<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)})">${s}<circle r="4" fill="#ffd23f"/></g>`; };
-  let dec=''; const FC=['#ff6b9d','#ffd23f','#ffffff','#b06bff','#ff7a3c','#67d0ff'];
-  for(let i=0;i<Math.floor(H/55);i++) dec+=flower(rand(24,W-24),rand(40,H-30),FC[i%FC.length]);
-  for(let i=0;i<Math.floor(H/150);i++) dec+=bush(rand(40,W-40),rand(50,H-40),rand(0.7,1.3));
-  for(let n=2;n<=TOTAL_STAGES;n+=3){ const p=pos(n); const ex=(Math.sin(n*0.6)>0)?rand(26,72):rand(W-72,W-26); dec+=tree(ex,p.y+rand(-20,28),rand(0.8,1.25)); }
+  const cx=W/2, amp=W*0.28;
+  const pos=n=>({x:cx+Math.sin(n*0.62)*amp, y:padTop+(n-1)*gapY});
+  // starfield + dashed constellation trail
+  let st=''; for(let i=0;i<Math.floor(H/8);i++) st+=`<circle cx="${(Math.random()*W).toFixed(0)}" cy="${(Math.random()*H).toFixed(0)}" r="${(Math.random()*1.6+0.3).toFixed(1)}" fill="#fff" opacity="${(0.15+Math.random()*0.55).toFixed(2)}"/>`;
   let pts=''; for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
-  const rope=`<polyline points="${pts}" fill="none" stroke="#6b4a1e" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>`
-    +`<polyline points="${pts}" fill="none" stroke="#f6c945" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>`
-    +`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 18"/>`;
-  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+dec+rope+'</svg>';
-  // a few meme mascots beside the trail
-  for(let n=4;n<=TOTAL_STAGES;n+=8){ const p=pos(n), side=(Math.sin(n*0.6)>0)?1:-1, img=MAP_DECOR[n%MAP_DECOR.length];
-    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.8,48,W-48).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:70px;height:70px"><img src="'+img+'"></div>'; }
+  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st
+    +'<polyline points="'+pts+'" fill="none" stroke="#ffffff55" stroke-width="3" stroke-dasharray="2 13" stroke-linecap="round"/></svg>';
+  // meme mascots drifting beside the trail
+  for(let n=3;n<=TOTAL_STAGES;n+=6){ const p=pos(n), side=(Math.sin(n*0.62)>0)?1:-1, img=MAP_DECOR[n%MAP_DECOR.length];
+    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.9,46,W-46).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:64px;height:64px"><img src="'+img+'"></div>'; }
+  // sector labels every 10 stages
   for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
-    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-72).toFixed(0)+'px">'+MAPS[Math.floor(r/10)%MAPS.length].name+'</div>'; }
+    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-64).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }
   for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=(n-1)%MAPS.length, stars=n<maxUnlocked?'★★★':'';
     h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
       +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';

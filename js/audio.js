@@ -23,7 +23,7 @@ function setSfxVol(v){
 }
 function toggleMute(){
   muted = !muted;
-  if(bgm) bgm.volume = muted ? 0 : musicVol;
+  if(bgm){ bgm.volume = muted ? 0 : musicVol; if(!muted) playMusic(); }
   return muted;
 }
 
@@ -44,6 +44,11 @@ function gunshot(){
   o.connect(og); og.connect(AC.destination); o.start(t); o.stop(t+0.13);
 }
 
-// start music on the very first user interaction (browser autoplay policy)
-['pointerdown','keydown','touchstart'].forEach(ev=>
-  window.addEventListener(ev, ()=>{ if(ensureAC()&&AC.state==='suspended')AC.resume(); playMusic(); }, {once:true, passive:true}));
+// start music on the first user interaction (browser autoplay policy) — retry until it actually plays
+const EVS=['pointerdown','keydown','touchstart','click'];
+function kickMusic(){
+  if(ensureAC() && AC.state==='suspended') AC.resume();
+  playMusic();
+  if(bgm && !bgm.paused) EVS.forEach(ev=>window.removeEventListener(ev,kickMusic));
+}
+EVS.forEach(ev=>window.addEventListener(ev,kickMusic,{passive:true}));
