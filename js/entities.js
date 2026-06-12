@@ -48,7 +48,7 @@ function spawnEnemy(t, x, y, boss=false){
 }
 
 function spawnWave(elapsed){
-  if(enemies.length > 260) return;
+  if(enemies.length > 90) return;       // cap keeps FPS high (O(n^2) separation)
   const radius = Math.max(VW,VH)*0.62 + 80, ang = Math.random()*7;
   const x = player.x + Math.cos(ang)*radius, y = player.y + Math.sin(ang)*radius;
   const hard = elapsed/60; // minutes survived
@@ -137,7 +137,7 @@ function drawEnemy(e){
   const X=sx(e.x), Y=sy(e.y);
   if(X<-80||X>VW+80||Y<-80||Y>VH+80) return; // cull off-screen
   ctx.save();
-  ctx.shadowColor=e.ring; ctx.shadowBlur=e.boss?32:14;
+  ctx.shadowColor=e.ring; ctx.shadowBlur=e.boss?30:0;   // glow only on bosses (perf)
   if(e.hit>0){ ctx.filter='brightness(2.2)'; }
   drawImgCentered(e.img, X, Y, e.size);
   ctx.restore();
@@ -160,12 +160,12 @@ function drawEnemy(e){
   }
 }
 function drawBullet(b){
-  ctx.save(); ctx.shadowColor='#ffd45e'; ctx.shadowBlur=14; ctx.fillStyle='#fff2a8';
-  ctx.beginPath(); ctx.arc(sx(b.x),sy(b.y),b.size,0,7); ctx.fill(); ctx.restore();
+  ctx.fillStyle='#ffe27a';
+  ctx.beginPath(); ctx.arc(sx(b.x),sy(b.y),b.size,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(sx(b.x),sy(b.y),b.size*0.45,0,7); ctx.fill();
 }
 function drawGem(g){
   const X=sx(g.x), Y=sy(g.y), s=g.big?7:5;
-  ctx.save(); ctx.shadowColor='#36d6ff'; ctx.shadowBlur=10; ctx.fillStyle='#36d6ff';
+  ctx.fillStyle='#36d6ff';
   ctx.beginPath(); ctx.moveTo(X,Y-s); ctx.lineTo(X+s,Y); ctx.lineTo(X,Y+s); ctx.lineTo(X-s,Y); ctx.closePath(); ctx.fill();
-  ctx.restore();
 }

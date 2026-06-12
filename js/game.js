@@ -136,8 +136,8 @@ function updateCampaign(){
     bossPhase=2; curBoss=spawnStageBoss(stage); addShake(22);
     showBanner('BOSS', curBoss.name+'!'); beep(120,0.6,'sawtooth',0.08);
   }
-  if(bossPhase===2 && curBoss && frame%240===0){
-    for(let i=0;i<3;i++){ const a=Math.random()*7;
+  if(bossPhase===2 && curBoss && frame%420===0 && enemies.length<18){
+    for(let i=0;i<2;i++){ const a=Math.random()*7;
       spawnEnemy(COIN_TYPES[Math.floor(Math.random()*3)], curBoss.x+Math.cos(a)*110, curBoss.y+Math.sin(a)*110); }
   }
   // enemies (vs player only)
@@ -276,9 +276,10 @@ function drawWarning(){
   if(bossPhase!==1) return;
   const pulse=0.4+0.4*Math.sin(frame*0.3);
   ctx.save(); ctx.globalAlpha=pulse; ctx.fillStyle='#ff2030'; ctx.fillRect(0,0,VW,VH);
-  ctx.globalAlpha=1; ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 60px Trebuchet MS';
+  const fs=Math.min(60, Math.round(VW*0.13));
+  ctx.globalAlpha=1; ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold '+fs+'px Trebuchet MS';
   ctx.shadowColor='#000'; ctx.shadowBlur=14; ctx.fillText('⚠ WARNING ⚠', VW/2, VH/2-10);
-  ctx.font='bold 26px Trebuchet MS'; ctx.fillText('BOSS APPROACHING', VW/2, VH/2+30);
+  ctx.font='bold '+Math.round(fs*0.45)+'px Trebuchet MS'; ctx.fillText('BOSS APPROACHING', VW/2, VH/2+fs*0.5);
   ctx.restore();
 }
 function drawBossBar(){
@@ -379,7 +380,7 @@ const MAP_DECOR=['assets/boss-bnb.png','assets/boss-pepe.png','assets/boss-doge.
 const LOCK_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="#eef"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#eef" stroke-width="2"/></svg>';
 function buildStageSelect(){
   const map=$('stageMap');
-  const W=Math.min(VW*0.96, 600), gapY=140, padTop=46, padBot=120;
+  const W=Math.min(VW*0.96, 600), gapY=140, padTop=132, padBot=120;   // padTop clears the sticky header
   const H=padTop+(TOTAL_STAGES-1)*gapY+padBot;
   map.style.width=W+'px'; map.style.height=H+'px';
   const cx=W/2, amp=W*0.28;
@@ -406,7 +407,7 @@ function buildStageSelect(){
     h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.45,sz/2+8,W-sz/2-8).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+ver(img)+'"></div>'; }
   // sector labels every 10 stages
   for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
-    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-64).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }
+    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-50).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }
   for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=(n-1)%MAPS.length, stars=n<maxUnlocked?'★★★':'';
     h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
       +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';
