@@ -1,7 +1,7 @@
 // Mame Survivor — main loop, two separate modes:
 //   CAMPAIGN = solo, stage-select map, per-stage boss, unlock next (no bots/leaderboard)
 //   ARENA    = slither-style, dogs shoot each other, eat XP orbs to grow, leaderboard (no stages/boss)
-const ST = { MENU:0, STAGESELECT:1, PLAY:2, LEVELUP:3, OVER:4, WIN:5, CLEAR:6 };
+const ST = { MENU:0, STAGESELECT:1, PLAY:2, LEVELUP:3, OVER:4, WIN:5, CLEAR:6, STORY:7 };
 let gs = ST.MENU, time=0, frame=0, spawnTimer=0;
 let best = +(localStorage.getItem('mamesurvivor_best')||0);
 let maxUnlocked = +(localStorage.getItem('mame_unlocked')||1);
@@ -23,7 +23,7 @@ let stage=1, stageKills=0, bossPhase=0, warnTimer=0, curBoss=null;
 let lastStage=1;
 let banner={text:'',sub:'',life:0};
 function showBanner(t,s){ banner={text:t,sub:s||'',life:140}; }
-function curMap(){ return gameMode==='arena' ? ARENA_THEME : MAPS[(stage-1)%MAPS.length]; }
+function curMap(){ return gameMode==='arena' ? ARENA_THEME : MAPS[actOf(stage)]; }   // one world per 10-stage act
 function stageQuota(s){ return 12 + Math.floor(s*1.5); }
 
 const $ = id => document.getElementById(id);
@@ -44,8 +44,20 @@ function startStage(n){
     fireRate:32,damage:10,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
   player.name='YOU'; const ch=CHARACTERS[selectedChar]; player.skin=ch.key; ch.apply(player);
   gameMode='campaign'; stage=n; lastStage=n; stageKills=0; bossPhase=0; warnTimer=0; curBoss=null;
-  showBanner('STAGE '+n, curMap().name);
-  gs=ST.PLAY; hideOverlays(); location.hash='campaign-'+n; startAudio();
+  location.hash='campaign-'+n;
+  if((n-1)%10===0) showStory(actOf(n));   // act intro cutscene at the start of each world
+  else beginPlay();
+}
+function beginPlay(){
+  showBanner('STAGE '+stage, curMap().name);
+  gs=ST.PLAY; hideOverlays(); startAudio();
+}
+function showStory(act){
+  const a=STORY.acts[act];
+  $('storyTitle').textContent=a.title;
+  $('storyText').innerHTML = (act===0 ? STORY.intro+'<br><br>' : '') + a.text
+    + '<br><br><span class="taunt">'+a.boss+': '+a.taunt+'</span>';
+  hideOverlays(); $('story').style.display='flex'; gs=ST.STORY; startAudio();
 }
 function stageClear(){
   if(stage>=TOTAL_STAGES){ win(); return; }
@@ -70,6 +82,7 @@ function win(){
   if(survived>best){ best=survived; localStorage.setItem('mamesurvivor_best',best); }
   $('winTime').textContent=fmt(survived);
   $('winKills').textContent='💀 '+player.kills+' kills';
+  $('winStory').textContent=STORY.ending;
   $('win').style.display='flex';
 }
 function gameOver(){
@@ -281,7 +294,7 @@ function drawWarning(){
   const fs=Math.min(60, Math.round(VW*0.13));
   ctx.globalAlpha=1; ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold '+fs+'px Trebuchet MS';
   ctx.shadowColor='#000'; ctx.shadowBlur=14; ctx.fillText('⚠ WARNING ⚠', VW/2, VH/2-10);
-  const bn=BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length].name+' INCOMING';
+  const bn=BOSS_ROSTER[actOf(stage)].name+' INCOMING';
   ctx.font='bold '+Math.round(fs*0.42)+'px Trebuchet MS'; ctx.fillText(bn, VW/2, VH/2+fs*0.5);
   ctx.restore();
 }
@@ -411,7 +424,7 @@ function buildStageSelect(){
   // sector labels every 10 stages
   for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
     h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-50).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }
-  for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=(n-1)%MAPS.length, stars=n<maxUnlocked?'★★★':'';
+  for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=actOf(n), stars=n<maxUnlocked?'★★★':'';
     h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
       +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';
   }
@@ -427,6 +440,7 @@ renderCharSelect();
 $('startBtn').onclick=()=>{ gameMode==='arena' ? startArena() : enterCampaign(); };
 $('retryBtn').onclick=()=>{ gameMode==='arena' ? startArena() : startStage(lastStage); };
 $('winRetry').onclick=()=>{ startStage(1); };
+$('storyGo').onclick=()=>{ beginPlay(); };
 $('winHome').onclick=()=>{ backToMenu(); };
 $('overHome').onclick=()=>{ backToMenu(); };
 $('homeBtn').onclick=()=>{ backToMenu(); };

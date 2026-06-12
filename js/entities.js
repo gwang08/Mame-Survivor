@@ -65,7 +65,7 @@ function spawnBoss(){
 }
 // big stage boss — bigger / tankier / harder each stage, cycling the roster
 function spawnStageBoss(stage){
-  const r = BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length];
+  const r = BOSS_ROSTER[actOf(stage)];   // boss themed to the act/world
   const hp = Math.round(700 + stage*150);
   const size = Math.min(150 + stage*5, 300);
   const dmg = Math.min(26 + stage*2, 80);
