@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Mame Survivor 🐕🔥 — Survive the Meme Coins</title>
 <meta name="description" content="Mame Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
-<link rel="icon" type="image/png" href="assets/favicon.png?v=9" />
-<link rel="apple-touch-icon" href="assets/favicon.png?v=9" />
+<link rel="icon" type="image/png" href="assets/favicon.png?v=11" />
+<link rel="apple-touch-icon" href="assets/favicon.png?v=11" />
 <style>
   :root{ --gold:#ffd45e; --cyan:#36d6ff; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
@@ -73,6 +73,9 @@
   #muteBtn{ position:fixed; top:46px; right:12px; z-index:20; width:42px; height:42px; font-size:20px; cursor:pointer;
     background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; }
   #muteBtn:active{ transform:scale(.92); }
+  #homeBtn{ position:fixed; top:46px; left:12px; z-index:20; width:42px; height:42px; cursor:pointer; align-items:center; justify-content:center;
+    background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; display:none; transition:transform .12s, background .12s, border-color .12s; }
+  #homeBtn:hover{ transform:scale(1.08); background:rgba(255,212,94,.22); border-color:#ffd45e; }
   /* mode toggle (menu) */
   .modes{ display:flex; gap:12px; }
   .mode{ cursor:pointer; padding:9px 18px; border-radius:12px; font-weight:900; font-size:14px; color:#1a1a1a;
@@ -170,8 +173,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=9" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
-      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=9" alt="Arena">ARENA<small>battle · grow · rank</small></button>
+      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=11" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
+      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=11" alt="Arena">ARENA<small>battle · grow · rank</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -214,6 +217,7 @@
   <div id="winKills" class="tag"></div>
   <div class="tag">You cleared all <b>50 stages</b> &amp; every meme-coin boss! 🚀</div>
   <button class="btn" id="winRetry">↻ PLAY AGAIN</button>
+  <button class="btn" id="winHome">← HOME</button>
 </div>
 
 <!-- GAME OVER -->
@@ -223,10 +227,12 @@
   <div id="finalLv" class="tag"></div>
   <div class="best" id="bestTime">Best: 0:00</div>
   <button class="btn" id="retryBtn">↻ RETRY</button>
+  <button class="btn" id="overHome">← HOME</button>
 </div>
 
-<audio id="bgm" src="assets/nhacnen.mp3?v=9" loop preload="auto"></audio>
+<audio id="bgm" src="assets/nhacnen.mp3?v=11" loop preload="auto"></audio>
 
+<button id="homeBtn" title="Home" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
 <button id="settingsBtn" title="Settings">⚙️</button>
 <button id="muteBtn" title="Mute / Unmute">🔊</button>
 
@@ -242,11 +248,11 @@
 
 <div id="hint">HODL to the moon 🚀 — mamesurvivor.fun</div>
 
-<script src="js/core.js?v=9"></script>
-<script src="js/audio.js?v=9"></script>
-<script src="js/bots.js?v=9"></script>
-<script src="js/entities.js?v=9"></script>
-<script src="js/upgrades.js?v=9"></script>
-<script src="js/game.js?v=9"></script>
+<script src="js/core.js?v=11"></script>
+<script src="js/audio.js?v=11"></script>
+<script src="js/bots.js?v=11"></script>
+<script src="js/entities.js?v=11"></script>
+<script src="js/upgrades.js?v=11"></script>
+<script src="js/game.js?v=11"></script>
 </body>
 </html>
