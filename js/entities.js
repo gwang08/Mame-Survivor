@@ -1,6 +1,6 @@
 // Mame Survivor — entities: player, enemy meme-coins, bullets, xp gems + spawning/drawing
 const imgs = {};
-function loadImg(key, src){ const i=new Image(); i.src=src; imgs[key]=i; }
+function loadImg(key, src){ const i=new Image(); i.src=ver(src); imgs[key]=i; }
 loadImg('player','assets/doge-sprite.png');
 loadImg('mame','assets/doge-mame.png');
 loadImg('boss','assets/enemy-boss-doge.png');

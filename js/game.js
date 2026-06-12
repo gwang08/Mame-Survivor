@@ -357,7 +357,7 @@ function renderCharSelect(){
   CHARACTERS.forEach((c,i)=>{
     const el=document.createElement('button'); el.className='char'+(i===selectedChar?' sel':'');
     el.style.setProperty('--cg', c.glow);
-    el.innerHTML=`<img src="${c.file}" alt="${c.name}"><div class="cn">${c.name}</div><div class="cp">${c.perk}</div>`;
+    el.innerHTML=`<img src="${ver(c.file)}" alt="${c.name}"><div class="cn">${c.name}</div><div class="cp">${c.perk}</div>`;
     el.onclick=()=>{ selectedChar=i; renderCharSelect(); beep(1000,0.05,'square',0.03); };
     box.appendChild(el);
   });
@@ -373,14 +373,24 @@ function buildStageSelect(){
   map.style.width=W+'px'; map.style.height=H+'px';
   const cx=W/2, amp=W*0.28;
   const pos=n=>({x:cx+Math.sin(n*0.62)*amp, y:padTop+(n-1)*gapY});
-  // starfield + dashed constellation trail
+  // starfield
   let st=''; for(let i=0;i<Math.floor(H/8);i++) st+=`<circle cx="${(Math.random()*W).toFixed(0)}" cy="${(Math.random()*H).toFixed(0)}" r="${(Math.random()*1.6+0.3).toFixed(1)}" fill="#fff" opacity="${(0.15+Math.random()*0.55).toFixed(2)}"/>`;
+  // vector planets (light + shadow sphere + optional ring), scattered off the trail
+  const planet=(x,y,r,c1,c2,ring)=>{ let s=`<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)})">`;
+    if(ring) s+=`<ellipse rx="${(r*1.8).toFixed(0)}" ry="${(r*0.55).toFixed(0)}" fill="none" stroke="${ring}" stroke-width="4" opacity=".55" transform="rotate(-22)"/>`;
+    s+=`<circle r="${r.toFixed(0)}" fill="${c2}"/><circle cx="${(-r*0.32).toFixed(0)}" cy="${(-r*0.32).toFixed(0)}" r="${(r*0.72).toFixed(0)}" fill="${c1}" opacity=".55"/>`;
+    s+=`<circle cx="${(-r*0.4).toFixed(0)}" cy="${(-r*0.42).toFixed(0)}" r="${(r*0.18).toFixed(0)}" fill="#fff" opacity=".5"/></g>`; return s; };
+  const PAL=[['#9fd8ff','#1f5a9e','#7fd0ff'],['#ffcaa0','#b8551f',0],['#d8b0ff','#5a2f9e','#c9a0ff'],['#a0ffc8','#2f9e5a',0],['#ffe08a','#b8860b','#ffd45e'],['#ff9fc0','#9e2f5a',0]];
+  let pl='';
+  for(let i=0;i<9;i++){ const c=PAL[i%PAL.length], r=rand(16,44), p=pos(i*5+3);
+    const sideX = (i%2? rand(W*0.62,W-30) : rand(30,W*0.34));   // keep off the central trail
+    pl+=planet(sideX, clamp(p.y+rand(-40,40),50,H-50), r, c[0], c[1], c[2]); }
   let pts=''; for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
-  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st
+  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st+pl
     +'<polyline points="'+pts+'" fill="none" stroke="#ffffff55" stroke-width="3" stroke-dasharray="2 13" stroke-linecap="round"/></svg>';
-  // meme mascots drifting beside the trail
-  for(let n=3;n<=TOTAL_STAGES;n+=6){ const p=pos(n), side=(Math.sin(n*0.62)>0)?1:-1, img=MAP_DECOR[n%MAP_DECOR.length];
-    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.9,46,W-46).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:64px;height:64px"><img src="'+img+'"></div>'; }
+  // a couple of meme mascots drifting in space
+  for(let n=6;n<=TOTAL_STAGES;n+=12){ const p=pos(n), side=(Math.sin(n*0.62)>0)?1:-1, img=MAP_DECOR[n%MAP_DECOR.length];
+    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.95,46,W-46).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:60px;height:60px"><img src="'+ver(img)+'"></div>'; }
   // sector labels every 10 stages
   for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
     h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-64).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }

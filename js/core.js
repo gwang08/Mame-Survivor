@@ -2,6 +2,8 @@
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 let VW = 0, VH = 0;
+const VER = '9';                       // bump on deploy to bust browser cache of assets
+const ver = u => u + (u.includes('?')?'&':'?') + 'v=' + VER;
 function resize(){ VW = cv.width = window.innerWidth; VH = cv.height = window.innerHeight; }
 window.addEventListener('resize', resize); resize();
 
