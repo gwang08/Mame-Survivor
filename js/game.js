@@ -368,25 +368,29 @@ const MAP_DECOR=['assets/coins/pepe.png','assets/coins/shib.png','assets/coins/d
 const LOCK_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="#eef"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#eef" stroke-width="2"/></svg>';
 function buildStageSelect(){
   const map=$('stageMap');
-  const W=Math.min(VW*0.94, 560), gapY=165, padTop=40, padBot=150;
+  const W=Math.min(VW*0.96, 600), gapY=140, padTop=46, padBot=120;
   const H=padTop+(TOTAL_STAGES-1)*gapY+padBot;
   map.style.width=W+'px'; map.style.height=H+'px';
-  const cx=W/2, amp=W*0.30;
-  const pos=n=>({x:cx+Math.sin(n*0.66)*amp, y:padTop+(n-1)*gapY});
+  const cx=W/2, amp=W*0.27;
+  const pos=n=>({x:cx+Math.sin(n*0.6)*amp, y:padTop+(n-1)*gapY});
+  // forest scenery (vector trees / bushes / flowers)
+  const tree=(x,y,s)=>`<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(${s})"><ellipse cx="0" cy="42" rx="32" ry="8" fill="#00000022"/><rect x="-7" y="4" width="14" height="40" rx="6" fill="#7a4a25"/><circle cx="0" cy="-14" r="30" fill="#3f9b3f"/><circle cx="-23" cy="6" r="23" fill="#49ab49"/><circle cx="23" cy="6" r="23" fill="#49ab49"/><circle cx="0" cy="-2" r="27" fill="#5cc45c"/><circle cx="-10" cy="-16" r="9" fill="#86e086" opacity=".7"/></g>`;
+  const bush=(x,y,s)=>`<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(${s})"><ellipse cx="0" cy="15" rx="30" ry="7" fill="#0000001a"/><circle cx="-16" cy="0" r="15" fill="#3f9b3f"/><circle cx="16" cy="0" r="15" fill="#3f9b3f"/><circle cx="0" cy="-6" r="19" fill="#4fb84f"/><circle cx="0" cy="0" r="13" fill="#69cc69"/></g>`;
+  const flower=(x,y,c)=>{ let s=''; for(let a=0;a<360;a+=72) s+=`<circle cx="${(Math.cos(a*Math.PI/180)*6).toFixed(1)}" cy="${(Math.sin(a*Math.PI/180)*6).toFixed(1)}" r="5" fill="${c}"/>`; return `<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)})">${s}<circle r="4" fill="#ffd23f"/></g>`; };
+  let dec=''; const FC=['#ff6b9d','#ffd23f','#ffffff','#b06bff','#ff7a3c','#67d0ff'];
+  for(let i=0;i<Math.floor(H/55);i++) dec+=flower(rand(24,W-24),rand(40,H-30),FC[i%FC.length]);
+  for(let i=0;i<Math.floor(H/150);i++) dec+=bush(rand(40,W-40),rand(50,H-40),rand(0.7,1.3));
+  for(let n=2;n<=TOTAL_STAGES;n+=3){ const p=pos(n); const ex=(Math.sin(n*0.6)>0)?rand(26,72):rand(W-72,W-26); dec+=tree(ex,p.y+rand(-20,28),rand(0.8,1.25)); }
   let pts=''; for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
-  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'
-    +'<polyline points="'+pts+'" fill="none" stroke="#ffffff40" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 20"/></svg>';
-  for(let i=0;i<70;i++) h+='<div class="spark" style="left:'+(Math.random()*W).toFixed(0)+'px;top:'+(Math.random()*H).toFixed(0)+'px;opacity:'+(0.2+Math.random()*0.4).toFixed(2)+'"></div>';
-  // scatter meme images creatively along both sides of the path
-  for(let n=1;n<=TOTAL_STAGES;n++){
-    const p=pos(n), side=(Math.sin(n*0.66)>0)?-1:1, off=amp*1.5+(n%3)*24, sz=46+(n%4)*14;
-    const img=MAP_DECOR[(n*3)%MAP_DECOR.length], spin=(n%5===0)?' spin':'';
-    h+='<div class="decor'+spin+'" style="left:'+clamp(cx+side*off,28,W-28).toFixed(0)+'px;top:'+(p.y-gapY*0.3).toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+img+'"></div>';
-    if(n%2===0){ const sz2=34+(n%3)*10, img2=MAP_DECOR[(n*7+2)%MAP_DECOR.length];
-      h+='<div class="decor" style="left:'+clamp(cx-side*off*0.8,28,W-28).toFixed(0)+'px;top:'+(p.y+gapY*0.28).toFixed(0)+'px;width:'+sz2+'px;height:'+sz2+'px"><img src="'+img2+'"></div>'; }
-  }
+  const rope=`<polyline points="${pts}" fill="none" stroke="#6b4a1e" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>`
+    +`<polyline points="${pts}" fill="none" stroke="#f6c945" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>`
+    +`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 18"/>`;
+  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+dec+rope+'</svg>';
+  // a few meme mascots beside the trail
+  for(let n=4;n<=TOTAL_STAGES;n+=8){ const p=pos(n), side=(Math.sin(n*0.6)>0)?1:-1, img=MAP_DECOR[n%MAP_DECOR.length];
+    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.8,48,W-48).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:70px;height:70px"><img src="'+img+'"></div>'; }
   for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
-    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-80).toFixed(0)+'px">'+MAPS[Math.floor(r/10)%MAPS.length].name+'</div>'; }
+    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-72).toFixed(0)+'px">'+MAPS[Math.floor(r/10)%MAPS.length].name+'</div>'; }
   for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=(n-1)%MAPS.length, stars=n<maxUnlocked?'★★★':'';
     h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
       +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';
