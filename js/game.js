@@ -258,7 +258,7 @@ function draw(){
   if(gs===ST.PLAY||gs===ST.LEVELUP){
     drawHUD(); drawBanner();
     if(gameMode==='arena'){ drawLeaderboard(); drawMinimap(); }
-    else { drawBossBar(); drawWarning(); }
+    else { drawBossBar(); drawWarning(); drawMinimap(); }
   }
   if(gs===ST.PLAY && joy.active) drawJoystick();
   $('homeBtn').style.display = (gs===ST.PLAY||gs===ST.LEVELUP) ? 'flex' : 'none';
@@ -335,7 +335,8 @@ function drawHUD(){
   ctx.textAlign='right'; ctx.font='bold 16px Trebuchet MS'; ctx.fillStyle='#fff'; ctx.fillText('💀 '+player.kills, VW-14, 30);
 }
 function drawMinimap(){
-  const R=Math.round(Math.max(46, Math.min(74, Math.min(VW,VH)*0.13))), cx=VW-R-12, cy=VH-R-12, range=1500;
+  const R=Math.round(Math.max(46, Math.min(74, Math.min(VW,VH)*0.13)));
+  const cx=(gameMode==='arena')?VW-R-12:R+12, cy=VH-R-12, range=1500;   // campaign radar bottom-left (clears boss bar)
   ctx.save();
   ctx.beginPath(); ctx.arc(cx,cy,R,0,7);
   ctx.fillStyle='rgba(8,10,22,.72)'; ctx.fill();
@@ -343,8 +344,14 @@ function drawMinimap(){
   const plot=(wx,wy,color,sz)=>{ let dx=(wx-player.x)/range*R, dy=(wy-player.y)/range*R;
     const m=Math.hypot(dx,dy); if(m>R-5){ dx=dx/m*(R-5); dy=dy/m*(R-5); }
     ctx.fillStyle=color; ctx.beginPath(); ctx.arc(cx+dx,cy+dy,sz,0,7); ctx.fill(); };
-  for(const b of bots) if(b.alive) plot(b.x,b.y,b.color,3.2);
-  ctx.fillStyle='#ffd45e'; ctx.beginPath(); ctx.arc(cx,cy,4.5,0,7); ctx.fill();   // YOU
+  if(gameMode==='arena'){
+    for(const b of bots) if(b.alive) plot(b.x,b.y,b.color,3.2);
+  } else {
+    for(const e of enemies){ if(e.stageBoss) continue; plot(e.x,e.y,'#ff6b6b',2); }   // swarm
+    if(curBoss){ plot(curBoss.x,curBoss.y,'#ffd45e',7);                                  // BOSS marker
+      const p=(Math.sin(frame*0.2)*0.5+0.5); ctx.globalAlpha=p; plot(curBoss.x,curBoss.y,'#fff',4); ctx.globalAlpha=1; }
+  }
+  ctx.fillStyle='#36d6ff'; ctx.beginPath(); ctx.arc(cx,cy,4.5,0,7); ctx.fill();   // YOU
   ctx.fillStyle='#cbd2ff'; ctx.font='bold 10px Trebuchet MS'; ctx.textAlign='center';
   ctx.fillText('RADAR', cx, cy-R-5);
   ctx.restore();
