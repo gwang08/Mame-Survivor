@@ -503,10 +503,9 @@ function buildStageSelect(){
     s+=`<circle r="${r.toFixed(0)}" fill="${c2}"/><circle cx="${(-r*0.32).toFixed(0)}" cy="${(-r*0.32).toFixed(0)}" r="${(r*0.72).toFixed(0)}" fill="${c1}" opacity=".55"/>`;
     s+=`<circle cx="${(-r*0.4).toFixed(0)}" cy="${(-r*0.42).toFixed(0)}" r="${(r*0.18).toFixed(0)}" fill="#fff" opacity=".5"/></g>`; return s; };
   const PAL=[['#9fd8ff','#1f5a9e','#7fd0ff'],['#ffcaa0','#b8551f',0],['#d8b0ff','#5a2f9e','#c9a0ff'],['#a0ffc8','#2f9e5a',0],['#ffe08a','#b8860b','#ffd45e'],['#ff9fc0','#9e2f5a',0]];
-  let pl='';
-  for(let i=0;i<5;i++){ const c=PAL[i%PAL.length], r=rand(18,40);
-    const sideX = (i%2? rand(W*0.66,W-34) : rand(34,W*0.30));   // edges only, off the central trail
-    pl+=planet(sideX, padTop+rand(20,H-padTop-60), r, c[0], c[1], c[2]); }
+  // fixed, tidy planet placement on the LEFT side (nodes live on the right) — no overlap, no randomness
+  const PLANETS=[ {x:0.20,y:0.20,r:20,p:3}, {x:0.30,y:0.40,r:34,p:2}, {x:0.16,y:0.62,r:26,p:0}, {x:0.26,y:0.84,r:30,p:4} ];
+  let pl=''; for(const q of PLANETS){ const c=PAL[q.p]; pl+=planet(W*q.x, padTop+(H-padTop-40)*q.y, q.r, c[0], c[1], c[2]); }
   let pts=''; for(let n=1;n<=TOTAL_NODES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
   let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st+pl
     +'<polyline points="'+pts+'" fill="none" stroke="#ffffff55" stroke-width="3" stroke-dasharray="2 13" stroke-linecap="round"/></svg>';
