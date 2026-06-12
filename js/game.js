@@ -257,7 +257,7 @@ function draw(){
   ctx.setTransform(1,0,0,1,0,0);
   if(gs===ST.PLAY||gs===ST.LEVELUP){
     drawHUD(); drawBanner();
-    if(gameMode==='arena') drawLeaderboard();
+    if(gameMode==='arena'){ drawLeaderboard(); drawMinimap(); }
     else { drawBossBar(); drawWarning(); }
   }
   if(gs===ST.PLAY && joy.active) drawJoystick();
@@ -329,6 +329,21 @@ function drawHUD(){
   }
   ctx.textAlign='right'; ctx.font='bold 16px Trebuchet MS'; ctx.fillStyle='#fff'; ctx.fillText('💀 '+player.kills, VW-14, 30);
 }
+function drawMinimap(){
+  const R=66, cx=VW-R-20, cy=VH-R-20, range=1500;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,7);
+  ctx.fillStyle='rgba(8,10,22,.72)'; ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle='#4dd2ff88'; ctx.stroke();
+  const plot=(wx,wy,color,sz)=>{ let dx=(wx-player.x)/range*R, dy=(wy-player.y)/range*R;
+    const m=Math.hypot(dx,dy); if(m>R-5){ dx=dx/m*(R-5); dy=dy/m*(R-5); }
+    ctx.fillStyle=color; ctx.beginPath(); ctx.arc(cx+dx,cy+dy,sz,0,7); ctx.fill(); };
+  for(const b of bots) if(b.alive) plot(b.x,b.y,b.color,3.2);
+  ctx.fillStyle='#ffd45e'; ctx.beginPath(); ctx.arc(cx,cy,4.5,0,7); ctx.fill();   // YOU
+  ctx.fillStyle='#cbd2ff'; ctx.font='bold 10px Trebuchet MS'; ctx.textAlign='center';
+  ctx.fillText('RADAR', cx, cy-R-5);
+  ctx.restore();
+}
 function drawJoystick(){
   ctx.globalAlpha=0.3; ctx.strokeStyle='#fff'; ctx.lineWidth=3;
   ctx.beginPath(); ctx.arc(joy.ox,joy.oy,60,0,7); ctx.stroke();
@@ -347,19 +362,40 @@ function renderCharSelect(){
     box.appendChild(el);
   });
 }
+const MAP_DECOR=['assets/coins/pepe.png','assets/coins/shib.png','assets/coins/doge.png','assets/coins/floki.png','assets/coins/bonk.png',
+  'assets/boss-bnb.png','assets/boss-doge.png','assets/boss-pepe.png','assets/boss-wojak.png','assets/boss-astronaut.png',
+  'assets/doge-sprite.png','assets/doge-mame.png'];
+const LOCK_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="#eef"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#eef" stroke-width="2"/></svg>';
 function buildStageSelect(){
-  const box=$('stageNodes'); box.innerHTML='';
+  const map=$('stageMap');
+  const W=Math.min(VW*0.94, 560), gapY=165, padTop=40, padBot=150;
+  const H=padTop+(TOTAL_STAGES-1)*gapY+padBot;
+  map.style.width=W+'px'; map.style.height=H+'px';
+  const cx=W/2, amp=W*0.30;
+  const pos=n=>({x:cx+Math.sin(n*0.66)*amp, y:padTop+(n-1)*gapY});
+  let pts=''; for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
+  let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'
+    +'<polyline points="'+pts+'" fill="none" stroke="#ffffff40" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 20"/></svg>';
+  for(let i=0;i<70;i++) h+='<div class="spark" style="left:'+(Math.random()*W).toFixed(0)+'px;top:'+(Math.random()*H).toFixed(0)+'px;opacity:'+(0.2+Math.random()*0.4).toFixed(2)+'"></div>';
+  // scatter meme images creatively along both sides of the path
   for(let n=1;n<=TOTAL_STAGES;n++){
-    const locked = n>maxUnlocked;
-    const el=document.createElement('button');
-    el.className='node'+(locked?' locked':'')+(n===maxUnlocked?' next':'');
-    el.style.marginLeft=(Math.sin(n*0.6)*90+90)+'px';   // zig-zag candy path
-    el.innerHTML = locked ? '🔒' : ('<b>'+n+'</b><small>'+MAPS[(n-1)%MAPS.length].name+'</small>');
-    if(!locked) el.onclick=()=>{ beep(1000,0.05,'square',0.04); startStage(n); };
-    box.appendChild(el);
+    const p=pos(n), side=(Math.sin(n*0.66)>0)?-1:1, off=amp*1.5+(n%3)*24, sz=46+(n%4)*14;
+    const img=MAP_DECOR[(n*3)%MAP_DECOR.length], spin=(n%5===0)?' spin':'';
+    h+='<div class="decor'+spin+'" style="left:'+clamp(cx+side*off,28,W-28).toFixed(0)+'px;top:'+(p.y-gapY*0.3).toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+img+'"></div>';
+    if(n%2===0){ const sz2=34+(n%3)*10, img2=MAP_DECOR[(n*7+2)%MAP_DECOR.length];
+      h+='<div class="decor" style="left:'+clamp(cx-side*off*0.8,28,W-28).toFixed(0)+'px;top:'+(p.y+gapY*0.28).toFixed(0)+'px;width:'+sz2+'px;height:'+sz2+'px"><img src="'+img2+'"></div>'; }
   }
+  for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
+    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-80).toFixed(0)+'px">'+MAPS[Math.floor(r/10)%MAPS.length].name+'</div>'; }
+  for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=(n-1)%MAPS.length, stars=n<maxUnlocked?'★★★':'';
+    h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
+      +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';
+  }
+  map.innerHTML=h;
+  map.querySelectorAll('.snode[data-n]').forEach(b=> b.onclick=()=>{ beep(1000,0.05,'square',0.04); startStage(+b.dataset.n); });
+  const cp=pos(Math.max(1,maxUnlocked)); $('stageSelect').scrollTop=Math.max(0, cp.y - VH*0.4);
 }
-function enterCampaign(){ gameMode='campaign'; buildStageSelect(); hideOverlays(); $('stageSelect').style.display='flex';
+function enterCampaign(){ gameMode='campaign'; buildStageSelect(); hideOverlays(); $('stageSelect').style.display='block';
   gs=ST.STAGESELECT; location.hash='campaign'; startAudio(); }
 function backToMenu(){ hideOverlays(); $('menu').style.display='flex'; gs=ST.MENU; location.hash=''; }
 
@@ -370,7 +406,12 @@ $('winRetry').onclick=()=>{ backToMenu(); };
 $('clearNext').onclick=()=>{ startStage(Math.min(TOTAL_STAGES,stage+1)); };
 $('clearMap').onclick =()=>{ enterCampaign(); };
 $('stageBack').onclick=()=>{ backToMenu(); };
-$('muteBtn').onclick=()=>{ $('muteBtn').textContent = toggleMute() ? '🔇' : '🔊'; };
+const GEAR_SVG='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5l1.6 2 2.5-.6.6 2.5 2.5.8-.8 2.4 1.6 2.1-1.6 2.1.8 2.4-2.5.8-.6 2.5-2.5-.6L12 21.5l-1.6-2-2.5.6-.6-2.5-2.5-.8.8-2.4L3 12l1.6-2.1-.8-2.4 2.5-.8.6-2.5 2.5.6z"/></svg>';
+const spk=on=> on
+ ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 8.5a4.5 4.5 0 0 1 0 7" fill="none" stroke="#fff" stroke-width="2"/></svg>'
+ : '<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M3 9v6h4l5 4V5L7 9H3z"/><line x1="16" y1="9.5" x2="22" y2="14.5" stroke="#fff" stroke-width="2"/><line x1="22" y1="9.5" x2="16" y2="14.5" stroke="#fff" stroke-width="2"/></svg>';
+$('settingsBtn').innerHTML=GEAR_SVG; $('muteBtn').innerHTML=spk(!muted);
+$('muteBtn').onclick=()=>{ const m=toggleMute(); $('muteBtn').innerHTML=spk(!m); };
 $('menuBest').textContent='Best: '+fmt(best);
 
 // mode select (Campaign / Arena) — image cards
