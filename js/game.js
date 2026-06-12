@@ -53,7 +53,7 @@ function startStage(n){
 function storyChar(who){
   switch(who){
     case 'mame':     return { name:'MAME',           src:CHARACTERS[selectedChar].file, side:'left',  cls:'' };
-    case 'moodeng':  return { name:'MOO DENG',        src:'assets/moodeng.png',          side:'mid',   cls:'moodeng' };
+    case 'moodeng':  return { name:'MOO DENG',        src:'assets/moodeng.png',          side:'right', cls:'moodeng' };
     case 'asteroid': return { name:'ASTEROID SHIBA',  src:'assets/boss-asteroid.png',    side:'right', cls:'boss' };
     case 'chillguy': return { name:'CHILLGUY',        src:'assets/boss-chillguy.png',    side:'right', cls:'boss' };
     case 'penguin':  return { name:'PENGUIN',         src:'assets/boss-penguin.png',     side:'right', cls:'boss' };
@@ -82,11 +82,9 @@ function showStory(si){
   const s=STORY.stages[si];
   $('vnTitle').textContent=s.title;
   // MAME is always the left protagonist; right = villain; center = Moo Deng (only if she's in the scene)
-  $('vnMame').src=ver(CHARACTERS[selectedChar].file);
-  const fr=s.intro.find(l=>storyChar(l.who).side==='right');
-  $('vnBoss').src=ver(storyChar(fr?fr.who:'asteroid').src);
-  const md=$('vnMid'), hasMd=s.intro.some(l=>l.who==='moodeng');
-  md.style.display=hasMd?'block':'none'; if(hasMd) md.src=ver('assets/moodeng.png');
+  $('vnMame').src=ver(CHARACTERS[selectedChar].file);   // MAME always on the left
+  $('vnBoss').style.display='none';                     // right slot appears only when a non-MAME speaks
+  $('vnMid').style.display='none';                      // (center slot no longer used)
   storyLines=s.intro; storyIdx=0;
   hideOverlays(); $('story').style.display='flex'; gs=ST.STORY; startAudio();
   if(bgm && !muted) bgm.volume = musicVol*0.4;   // duck music during dialogue
@@ -94,12 +92,12 @@ function showStory(si){
 }
 function renderStoryLine(){
   const L=storyLines[storyIdx]; if(!L){ beginPlay(); return; }
-  const c=storyChar(L.who), side=c.side;
-  // the speaker takes its slot; everyone else dims
-  if(side==='left') $('vnMame').src=ver(c.src); else if(side==='right') $('vnBoss').src=ver(c.src);
-  for(const [id,sd] of [['vnMame','left'],['vnMid','mid'],['vnBoss','right']]){
-    $(id).classList.toggle('act', side===sd); $(id).classList.toggle('dim', side!==sd);
-  }
+  const c=storyChar(L.who), left=c.side==='left';
+  // only 2 characters on screen: MAME (left) + the current speaker (right slot swaps each line)
+  if(left) $('vnMame').src=ver(c.src);
+  else { $('vnBoss').src=ver(c.src); $('vnBoss').style.display='block'; }
+  $('vnMame').classList.toggle('act', left);  $('vnMame').classList.toggle('dim', !left);
+  $('vnBoss').classList.toggle('act', !left); $('vnBoss').classList.toggle('dim', left);
   $('vnName').className='vn-name '+c.cls;
   $('vnName').textContent=c.name;
   // full-screen scene background reflects the speaker (Dog Planet for MAME, Pump capsule for the rest)
