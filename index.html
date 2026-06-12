@@ -288,12 +288,12 @@
 
 <div id="hint">HODL to the moon 🚀 — mamesurvivor.fun</div>
 
-<script src="js/core.js?v=21"></script>
-<script src="js/audio.js?v=21"></script>
-<script src="js/bots.js?v=21"></script>
-<script src="js/entities.js?v=21"></script>
-<script src="js/upgrades.js?v=21"></script>
-<script src="js/story.js?v=21"></script>
-<script src="js/game.js?v=21"></script>
+<script>
+/* always load the freshest JS (busts browser cache without hard-reload) */
+(function(){ var t=Date.now(),
+  f=['js/core.js','js/audio.js','js/bots.js','js/entities.js','js/upgrades.js','js/story.js','js/game.js'];
+  for(var i=0;i<f.length;i++) document.write('<script src="'+f[i]+'?t='+t+'"><\/script>');
+})();
+</script>
 </body>
 </html>
