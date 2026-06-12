@@ -28,7 +28,7 @@ function stageQuota(s){ return 12 + Math.floor(s*1.5); }
 
 const $ = id => document.getElementById(id);
 const fmt = s => { const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); };
-function hideOverlays(){ ['menu','stageSelect','over','levelup','win','clear'].forEach(k=>$(k).style.display='none'); }
+function hideOverlays(){ ['menu','stageSelect','over','levelup','win','clear','story'].forEach(k=>$(k).style.display='none'); }
 function startAudio(){ if(ensureAC()&&AC.state==='suspended')AC.resume(); playMusic(); }
 
 function resetPlayerCommon(){
