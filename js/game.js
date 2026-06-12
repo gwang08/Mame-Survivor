@@ -130,8 +130,8 @@ function updateCampaign(){
     }
   }
   if(bossPhase===0 && stageKills>=stageQuota(stage)){
-    bossPhase=1; warnTimer=150;
-    showBanner('⚠ WARNING', BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length].name+' INCOMING'); beep(160,0.5,'sawtooth',0.07);
+    bossPhase=1; warnTimer=150; banner.life=0;   // drawWarning handles the on-screen notice (no duplicate banner)
+    beep(160,0.5,'sawtooth',0.07);
   }
   if(bossPhase===1 && (warnTimer-=DT)<=0){
     enemies.length=0;                       // clear the swarm so the boss fight is 1-on-1
@@ -281,7 +281,8 @@ function drawWarning(){
   const fs=Math.min(60, Math.round(VW*0.13));
   ctx.globalAlpha=1; ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold '+fs+'px Trebuchet MS';
   ctx.shadowColor='#000'; ctx.shadowBlur=14; ctx.fillText('⚠ WARNING ⚠', VW/2, VH/2-10);
-  ctx.font='bold '+Math.round(fs*0.45)+'px Trebuchet MS'; ctx.fillText('BOSS APPROACHING', VW/2, VH/2+fs*0.5);
+  const bn=BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length].name+' INCOMING';
+  ctx.font='bold '+Math.round(fs*0.42)+'px Trebuchet MS'; ctx.fillText(bn, VW/2, VH/2+fs*0.5);
   ctx.restore();
 }
 function drawBossBar(){
