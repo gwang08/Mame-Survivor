@@ -16,10 +16,8 @@ BOSS_ROSTER.forEach(b=>loadImg(b.img,'assets/'+b.img+'.png'));
 
 // ---- playable characters (distinct sprite + a starting perk) ----
 const CHARACTERS = [
-  {key:'player', file:'assets/doge-sprite.png', name:'SHADOW DOGE', perk:'💥 +25% Damage',     glow:'#ffd45e',
-   apply:p=>{ p.damage=Math.round(p.damage*1.25); }},
-  {key:'mame',   file:'assets/doge-mame.png',   name:'MAME DOGE',   perk:'❤️ +40 HP & Regen', glow:'#4be1ff',
-   apply:p=>{ p.maxHp+=40; p.hp=p.maxHp; p.regen+=0.5; }},
+  {key:'player', file:'assets/doge-sprite.png', name:'MAME', perk:'🐕 The Last Shiba', glow:'#ffd45e',
+   apply:p=>{}},
 ];
 
 // ---- player ----
