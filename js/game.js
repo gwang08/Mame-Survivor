@@ -362,8 +362,7 @@ function renderCharSelect(){
     box.appendChild(el);
   });
 }
-const MAP_DECOR=['assets/coins/pepe.png','assets/coins/shib.png','assets/coins/doge.png','assets/coins/floki.png','assets/coins/bonk.png',
-  'assets/boss-bnb.png','assets/boss-doge.png','assets/boss-pepe.png','assets/boss-wojak.png','assets/boss-astronaut.png',
+const MAP_DECOR=['assets/boss-bnb.png','assets/boss-pepe.png','assets/boss-doge.png','assets/boss-wojak.png','assets/boss-astronaut.png',
   'assets/doge-sprite.png','assets/doge-mame.png'];
 const LOCK_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="#eef"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#eef" stroke-width="2"/></svg>';
 function buildStageSelect(){
@@ -388,9 +387,11 @@ function buildStageSelect(){
   let pts=''; for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
   let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st+pl
     +'<polyline points="'+pts+'" fill="none" stroke="#ffffff55" stroke-width="3" stroke-dasharray="2 13" stroke-linecap="round"/></svg>';
-  // a couple of meme mascots drifting in space
-  for(let n=6;n<=TOTAL_STAGES;n+=12){ const p=pos(n), side=(Math.sin(n*0.62)>0)?1:-1, img=MAP_DECOR[n%MAP_DECOR.length];
-    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.95,46,W-46).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:60px;height:60px"><img src="'+ver(img)+'"></div>'; }
+  // boss mascots drifting in space — big & clearly visible, cycling all of them
+  let di=0;
+  for(let n=4;n<=TOTAL_STAGES;n+=3){ const p=pos(n), side=(Math.sin(n*0.62)>0)?-1:1, img=MAP_DECOR[di++ % MAP_DECOR.length];
+    const sz=84+(di%3)*16;   // 84-116px
+    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.45,sz/2+8,W-sz/2-8).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+ver(img)+'"></div>'; }
   // sector labels every 10 stages
   for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
     h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-64).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }
