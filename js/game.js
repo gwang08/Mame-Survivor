@@ -70,6 +70,7 @@ function renderStoryLine(){
   $('vnText').textContent=L.text;
   mame.classList.toggle('act', who==='mame'); mame.classList.toggle('dim', who!=='mame');
   bss.classList.toggle('act', who==='boss');  bss.classList.toggle('dim', who!=='boss');
+  $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
 }
 function storyAdvance(){ if(gs!==ST.STORY) return; storyIdx++; if(storyIdx>=storyLines.length) beginPlay(); else renderStoryLine(); }
 function stageClear(){
@@ -455,6 +456,10 @@ $('retryBtn').onclick=()=>{ gameMode==='arena' ? startArena() : startStage(lastS
 $('winRetry').onclick=()=>{ startStage(1); };
 $('story').onclick=()=>{ storyAdvance(); };
 $('vnSkip').onclick=(e)=>{ e.stopPropagation(); beginPlay(); };
+window.addEventListener('keydown', e=>{ if(gs===ST.STORY){
+  if(e.code==='Space'){ e.preventDefault(); beginPlay(); }           // Space = skip into the game
+  else if(e.code==='Enter'||e.code==='ArrowRight'){ e.preventDefault(); storyAdvance(); }  // next line
+}});
 $('winHome').onclick=()=>{ backToMenu(); };
 $('overHome').onclick=()=>{ backToMenu(); };
 $('homeBtn').onclick=()=>{ backToMenu(); };
