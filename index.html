@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Mame Survivor 🐕🔥 — Survive the Meme Coins</title>
 <meta name="description" content="Mame Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
-<link rel="icon" type="image/png" href="assets/favicon.png?v=21" />
-<link rel="apple-touch-icon" href="assets/favicon.png?v=21" />
+<link rel="icon" type="image/png" href="assets/favicon.png?v=22" />
+<link rel="apple-touch-icon" href="assets/favicon.png?v=22" />
 <style>
   :root{ --gold:#ffd45e; --cyan:#36d6ff; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
@@ -166,6 +166,24 @@
     .vn-box{ margin-bottom:16px; padding:14px 16px 26px; border-width:2px; }
     .vn-title{ top:12px; }
   }
+  /* stage transition cutscene */
+  #trans{ background:radial-gradient(circle at 72% 18%, #2a2350, #05040d 78%); justify-content:flex-end; gap:0; padding:0; cursor:pointer; overflow:hidden; }
+  .trans-title{ position:absolute; top:16px; left:0; right:0; text-align:center; font-size:clamp(20px,5vw,32px); font-weight:900;
+    color:#ffd45e; text-shadow:0 0 18px rgba(255,212,94,.5); letter-spacing:1px; z-index:3; }
+  .trans-sky{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .moon2{ position:absolute; top:9%; right:9%; width:min(22vw,150px); height:min(22vw,150px); border-radius:50%;
+    background:radial-gradient(circle at 38% 35%, #ffffff, #d2d8e8 58%, #9aa3c0); box-shadow:0 0 60px #cfd6ffaa, inset -10px -10px 0 #b6bed6; }
+  .flygroup{ position:absolute; left:0; top:0; width:min(42vw,210px); }
+  .fly-ship{ width:100%; display:block; filter:drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
+  .fly-boss{ position:absolute; left:28%; top:-44%; width:58%; filter:drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
+  .fly-mame{ position:absolute; left:0; top:0; width:min(24vw,120px); filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+  .flygroup.go{ animation:flyAway 3.4s cubic-bezier(.45,0,.7,1) forwards; }
+  .fly-mame.go{ animation:chase 3.4s cubic-bezier(.45,0,.7,1) forwards; }
+  @keyframes flyAway{ 0%{ transform:translate(5vw,50vh) rotate(-14deg) scale(1); } 100%{ transform:translate(64vw,5vh) rotate(-20deg) scale(.4); } }
+  @keyframes chase{ 0%{ transform:translate(-14vw,64vh) rotate(-14deg) scale(.95); } 100%{ transform:translate(48vw,15vh) rotate(-20deg) scale(.4); } }
+  .trans-box{ position:relative; z-index:2; }
+  .trans-box .btn{ margin-top:12px; }
+  .trans-box .vn-name.boss{ color:#ff6b6b; }
   /* social icons + panel sizing */
   #menu .panel{ max-height:88vh; overflow-y:auto; gap:9px; padding:20px 26px; }
   #menu .char{ padding:10px; } #menu .char img{ width:64px; height:64px; }
@@ -198,8 +216,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=21" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
-      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=21" alt="Arena">ARENA<small>battle · grow · rank</small></button>
+      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=22" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
+      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=22" alt="Arena">ARENA<small>battle · grow · rank</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -260,6 +278,25 @@
   </div>
 </div>
 
+<!-- STAGE TRANSITION (boss flees on a ship to the moon, MAME chases) -->
+<div class="overlay" id="trans" style="display:none">
+  <div id="transTitle" class="trans-title">STAGE CLEARED</div>
+  <div class="trans-sky">
+    <div class="moon2"></div>
+    <div id="transFly" class="flygroup">
+      <img id="transBoss" class="fly-boss" alt="">
+      <img id="transShip" class="fly-ship" src="assets/ship.png" alt="">
+    </div>
+    <img id="transMame" class="fly-mame" alt="">
+  </div>
+  <div class="vn-box trans-box">
+    <button id="transSkip" class="vn-skip">SKIP ⏭</button>
+    <div id="transName" class="vn-name"></div>
+    <div id="transText" class="vn-text"></div>
+    <button class="btn" id="transNext">▶ NEXT STAGE</button>
+  </div>
+</div>
+
 <!-- GAME OVER -->
 <div class="overlay" id="over" style="display:none">
   <h1 style="color:#ff5b7a;text-shadow:0 0 24px rgba(255,91,122,.6)">GAME OVER</h1>
@@ -270,7 +307,7 @@
   <button class="btn" id="overHome">← HOME</button>
 </div>
 
-<audio id="bgm" src="assets/nhacnen.mp3?v=21" loop preload="auto"></audio>
+<audio id="bgm" src="assets/nhacnen.mp3?v=22" loop preload="auto"></audio>
 
 <button id="homeBtn" title="Home" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
 <button id="settingsBtn" title="Settings">⚙️</button>

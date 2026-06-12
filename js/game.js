@@ -1,7 +1,7 @@
 // Mame Survivor — main loop, two separate modes:
 //   CAMPAIGN = solo, stage-select map, per-stage boss, unlock next (no bots/leaderboard)
 //   ARENA    = slither-style, dogs shoot each other, eat XP orbs to grow, leaderboard (no stages/boss)
-const ST = { MENU:0, STAGESELECT:1, PLAY:2, LEVELUP:3, OVER:4, WIN:5, CLEAR:6, STORY:7 };
+const ST = { MENU:0, STAGESELECT:1, PLAY:2, LEVELUP:3, OVER:4, WIN:5, CLEAR:6, STORY:7, TRANS:8 };
 let gs = ST.MENU, time=0, frame=0, spawnTimer=0;
 let best = +(localStorage.getItem('mamesurvivor_best')||0);
 let maxUnlocked = +(localStorage.getItem('mame_unlocked')||1);
@@ -28,7 +28,7 @@ function stageQuota(s){ return 12 + Math.floor(s*1.5); }
 
 const $ = id => document.getElementById(id);
 const fmt = s => { const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); };
-function hideOverlays(){ ['menu','stageSelect','over','levelup','win','clear','story'].forEach(k=>$(k).style.display='none'); }
+function hideOverlays(){ ['menu','stageSelect','over','levelup','win','clear','story','trans'].forEach(k=>$(k).style.display='none'); }
 function startAudio(){ if(ensureAC()&&AC.state==='suspended')AC.resume(); playMusic(); }
 
 function resetPlayerCommon(){
@@ -53,7 +53,19 @@ function beginPlay(){
   showBanner('STAGE '+stage, curMap().name);
   gs=ST.PLAY; hideOverlays(); startAudio();    // startAudio restores full music volume
 }
-let storyLines=[], storyIdx=0, typeTimer=null, typing=false, fullLine='';
+let storyLines=[], storyIdx=0, typeTimer=null, typing=false, fullLine='', typeEl=null;
+let transLines=[], transIdx=0, transNextStage=2;
+// shared typewriter
+function typeInto(el, text, blip){
+  typeEl=el; fullLine=text; clearInterval(typeTimer); typing=true; let i=0; el.textContent='';
+  typeTimer=setInterval(()=>{ i++; el.textContent=fullLine.slice(0,i);
+    if(i%2===0 && fullLine[i-1]!==' ') beep(blip,0.03,'square',0.035);
+    if(i>=fullLine.length){ clearInterval(typeTimer); typing=false; } }, 18);
+}
+function completeType(){ clearInterval(typeTimer); typing=false; if(typeEl) typeEl.textContent=fullLine; }
+const blipFor = who => who==='boss'?170 : who==='mame'?500 : 320;
+
+// ---- pre-fight dialogue ----
 function showStory(act){
   const a=STORY.acts[act], boss=BOSS_ROSTER[act];
   $('vnTitle').textContent=a.title;
@@ -72,23 +84,48 @@ function renderStoryLine(){
   mame.classList.toggle('act', who==='mame'); mame.classList.toggle('dim', who!=='mame');
   bss.classList.toggle('act', who==='boss');  bss.classList.toggle('dim', who!=='boss');
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
-  // typewriter reveal + per-speaker typing blips
-  fullLine=L.text; const blip = who==='boss'?170 : who==='mame'?500 : 320;
-  clearInterval(typeTimer); typing=true; let i=0; $('vnText').textContent='';
-  typeTimer=setInterval(()=>{
-    i++; $('vnText').textContent=fullLine.slice(0,i);
-    if(i%2===0 && fullLine[i-1]!==' ') beep(blip,0.03,'square',0.035);
-    if(i>=fullLine.length){ clearInterval(typeTimer); typing=false; }
-  }, 18);
+  typeInto($('vnText'), L.text, blipFor(who));
 }
 function storyAdvance(){
   if(gs!==ST.STORY) return;
-  if(typing){ clearInterval(typeTimer); typing=false; $('vnText').textContent=fullLine; return; }  // 1st tap: reveal full line
+  if(typing){ completeType(); return; }
   storyIdx++; if(storyIdx>=storyLines.length) beginPlay(); else renderStoryLine();
 }
+
+// ---- post-fight transition cutscene (boss flees on a ship to the moon, MAME chases) ----
+function showTransition(nextStage){
+  transNextStage=nextStage;
+  const act=actOf(stage), boss=BOSS_ROSTER[act];
+  $('transTitle').textContent='STAGE '+stage+' CLEARED';
+  $('transBoss').src=ver('assets/'+boss.img+'.png');
+  $('transMame').src=ver(CHARACTERS[selectedChar].file);
+  transLines=STORY.acts[act].outro||[]; transIdx=0;
+  hideOverlays(); $('trans').style.display='flex'; gs=ST.TRANS;
+  const fg=$('transFly'), mm=$('transMame');      // restart the fly animation
+  fg.classList.remove('go'); mm.classList.remove('go'); void fg.offsetWidth; fg.classList.add('go'); mm.classList.add('go');
+  if(bgm && !muted) bgm.volume = musicVol*0.4;
+  beep(880,0.25,'sine',0.05);
+  renderTransLine();
+}
+function renderTransLine(){
+  const L=transLines[transIdx]; if(!L) return;
+  $('transName').className='vn-name'+(L.who==='boss'?' boss':'');
+  $('transName').textContent = L.who==='boss' ? BOSS_ROSTER[actOf(stage)].name : 'MAME';
+  typeInto($('transText'), L.text, blipFor(L.who));
+}
+function transAdvance(){
+  if(gs!==ST.TRANS) return;
+  if(typing){ completeType(); return; }
+  transIdx++; if(transIdx<transLines.length) renderTransLine();   // else wait for NEXT button
+}
+function proceedNext(){ clearInterval(typeTimer); typing=false; startStage(transNextStage); }
+
 function stageClear(){
-  if(stage>=TOTAL_STAGES){ win(); return; }
   maxUnlocked=Math.max(maxUnlocked, stage+1); localStorage.setItem('mame_unlocked',maxUnlocked);
+  if(stage>=TOTAL_STAGES){ win(); return; }
+  showTransition(stage+1);
+}
+function stageClearOLD(){
   gs=ST.CLEAR; $('clearStage').textContent='STAGE '+stage+' CLEAR!';
   $('clear').style.display='flex'; beep(1400,0.25,'sine',0.07);
 }
@@ -469,10 +506,18 @@ $('retryBtn').onclick=()=>{ gameMode==='arena' ? startArena() : startStage(lastS
 $('winRetry').onclick=()=>{ startStage(1); };
 $('story').onclick=()=>{ storyAdvance(); };
 $('vnSkip').onclick=(e)=>{ e.stopPropagation(); beginPlay(); };
-window.addEventListener('keydown', e=>{ if(gs===ST.STORY){
-  if(e.code==='Space'){ e.preventDefault(); beginPlay(); }           // Space = skip into the game
-  else if(e.code==='Enter'||e.code==='ArrowRight'){ e.preventDefault(); storyAdvance(); }  // next line
-}});
+$('trans').onclick=()=>{ transAdvance(); };
+$('transNext').onclick=(e)=>{ e.stopPropagation(); proceedNext(); };
+$('transSkip').onclick=(e)=>{ e.stopPropagation(); proceedNext(); };
+window.addEventListener('keydown', e=>{
+  if(gs===ST.STORY){
+    if(e.code==='Space'){ e.preventDefault(); beginPlay(); }
+    else if(e.code==='Enter'||e.code==='ArrowRight'){ e.preventDefault(); storyAdvance(); }
+  } else if(gs===ST.TRANS){
+    if(e.code==='Space'){ e.preventDefault(); proceedNext(); }
+    else if(e.code==='Enter'||e.code==='ArrowRight'){ e.preventDefault(); transAdvance(); }
+  }
+});
 $('winHome').onclick=()=>{ backToMenu(); };
 $('overHome').onclick=()=>{ backToMenu(); };
 $('homeBtn').onclick=()=>{ backToMenu(); };
