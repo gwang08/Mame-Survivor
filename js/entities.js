@@ -36,11 +36,11 @@ const bullets = [], enemies = [], gems = [];
 
 // ---- enemy meme-coin archetypes (full-body sprites with baked-in weapons) ----
 const COIN_TYPES = [
-  {img:'wif',    name:'WIF',             ring:'#ff9ad1', hp:16, speed:1.9, dmg:7,  size:54, xp:1},
-  {img:'peanut', name:'PEANUT',          ring:'#d08a48', hp:22, speed:1.7, dmg:8,  size:54, xp:1},
-  {img:'popcat', name:'POPCAT',          ring:'#f0d8b0', hp:34, speed:1.5, dmg:9,  size:58, xp:2},
-  {img:'bonk',   name:'BONK',            ring:'#ffb028', hp:58, speed:1.4, dmg:12, size:60, xp:4},
-  {img:'sahur',  name:'TUNG TUNG SAHUR', ring:'#b8884a', hp:92, speed:1.2, dmg:14, size:66, xp:5},
+  {img:'wif',    name:'WIF',             ring:'#ff9ad1', hp:16, speed:1.9, dmg:7,  size:80, xp:1},
+  {img:'peanut', name:'PEANUT',          ring:'#d08a48', hp:22, speed:1.7, dmg:8,  size:80, xp:1},
+  {img:'popcat', name:'POPCAT',          ring:'#f0d8b0', hp:34, speed:1.5, dmg:9,  size:86, xp:2},
+  {img:'bonk',   name:'BONK',            ring:'#ffb028', hp:58, speed:1.4, dmg:12, size:90, xp:4},
+  {img:'sahur',  name:'TUNG TUNG SAHUR', ring:'#b8884a', hp:92, speed:1.2, dmg:14, size:98, xp:5},
 ];
 
 function spawnEnemy(t, x, y, boss=false){
