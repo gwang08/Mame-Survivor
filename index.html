@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Mame Survivor 🐕🔥 — Survive the Meme Coins</title>
 <meta name="description" content="Mame Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
-<link rel="icon" type="image/png" href="assets/favicon.png?v=33" />
-<link rel="apple-touch-icon" href="assets/favicon.png?v=33" />
+<link rel="icon" type="image/png" href="assets/favicon.png?v=34" />
+<link rel="apple-touch-icon" href="assets/favicon.png?v=34" />
 <style>
   :root{ --gold:#ffd45e; --cyan:#36d6ff; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
@@ -152,7 +152,7 @@
   #story{ background:radial-gradient(circle at 50% 25%, #241a52, #05040d 78%); justify-content:flex-end; gap:0; padding:0; cursor:pointer; }
   .vn-title{ position:absolute; top:18px; left:0; right:0; text-align:center; font-size:clamp(18px,5vw,30px); font-weight:900;
     letter-spacing:2px; color:#ffd45e; text-shadow:0 0 18px rgba(255,212,94,.5); }
-  .vn-stage{ position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 4vw 180px; pointer-events:none; }
+  .vn-stage{ position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:space-between; padding:0 4vw 180px; pointer-events:none; }
   .vn-char{ height:min(56vh,460px); max-width:46%; object-fit:contain; transition:transform .25s, filter .25s, opacity .25s;
     filter:drop-shadow(0 12px 30px rgba(0,0,0,.6)); }
   .vn-char.left{ transform:scaleX(-1); }                 /* MAME faces the boss */
@@ -163,18 +163,16 @@
   /* per-speaker dialogue backgrounds */
   .vn-box.bg-mame{ border-color:#7fb6ff; background:
     linear-gradient(180deg,rgba(8,10,28,.78),rgba(8,10,28,.9)),
-    url('assets/dogplanet.png?v=33') center/cover no-repeat; }
+    url('assets/dogplanet.png?v=34') center/cover no-repeat; }
   .vn-box.bg-pump{ border-color:#39d98a; background:
     linear-gradient(90deg,rgba(8,22,17,.92) 38%,rgba(8,22,17,.4)),
-    url('assets/ship-pump.png?v=33') right -8px center/auto 150% no-repeat,
+    url('assets/ship-pump.png?v=34') right -8px center/auto 150% no-repeat,
     linear-gradient(180deg,#11271d,#0a160f); }
-  /* full-screen scene background behind the characters (per speaker) */
-  #story.bg-mame{ background:
-    linear-gradient(180deg,rgba(6,8,24,.58),rgba(6,8,24,.82)),
-    url('assets/dogplanet.png?v=33') center/cover no-repeat; }
-  #story.bg-pump{ background:
-    radial-gradient(circle at 50% 45%, rgba(20,64,46,.4), rgba(5,14,10,.88)),
-    url('assets/ship-pump.png?v=33') center/min(64vw,620px) no-repeat, #0a160f; }
+  /* split scene background: LEFT = Dog Planet (MAME's side), RIGHT = Pump.fun ship */
+  .story-bg{ position:absolute; inset:0; z-index:0; display:flex; }
+  .story-bg .sb-left, .story-bg .sb-right{ flex:1 1 50%; background-position:center; background-repeat:no-repeat; }
+  .story-bg .sb-left{ background-image:linear-gradient(rgba(6,8,24,.45),rgba(6,8,24,.72)),url('assets/dogplanet.png?v=34'); background-size:cover; }
+  .story-bg .sb-right{ background-color:#0a160f; background-image:linear-gradient(rgba(5,14,10,.5),rgba(5,14,10,.78)),url('assets/ship-pump.png?v=34'); background-size:contain; }
   /* third (center) character slot — Moo Deng pleading with MAME */
   .vn-char.mid{ position:absolute; left:50%; top:50%; transform:translate(-50%,-54%);
     height:min(42vh,330px); max-width:34%; z-index:1; }
@@ -250,8 +248,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=33" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
-      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=33" alt="Arena">ARENA<small>battle · grow · rank</small></button>
+      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=34" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
+      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=34" alt="Arena">ARENA<small>battle · grow · rank</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -300,6 +298,7 @@
 
 <!-- STORY DIALOGUE (visual-novel) -->
 <div class="overlay" id="story" style="display:none">
+  <div class="story-bg"><div class="sb-left"></div><div class="sb-right"></div></div>
   <div id="vnTitle" class="vn-title">ACT I</div>
   <div class="vn-stage">
     <img id="vnMame" class="vn-char left" alt="">
@@ -349,7 +348,7 @@
   <button class="btn" id="overHome">← HOME</button>
 </div>
 
-<audio id="bgm" src="assets/nhacnen.mp3?v=33" loop preload="auto"></audio>
+<audio id="bgm" src="assets/nhacnen.mp3?v=34" loop preload="auto"></audio>
 
 <button id="homeBtn" title="Home" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
 <button id="settingsBtn" title="Settings">⚙️</button>

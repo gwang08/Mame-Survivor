@@ -90,20 +90,24 @@ function showStory(si){
   if(bgm && !muted) bgm.volume = musicVol*0.4;   // duck music during dialogue
   renderStoryLine();
 }
+// which character stands in the RIGHT slot for a given line (the current non-MAME speaker,
+// or — while MAME talks — the nearest upcoming/previous non-MAME so they stand there too)
+function rightCharFor(idx){
+  if(storyChar(storyLines[idx].who).side==='right') return storyLines[idx].who;
+  for(let i=idx+1;i<storyLines.length;i++) if(storyChar(storyLines[i].who).side==='right') return storyLines[i].who;
+  for(let i=idx-1;i>=0;i--)               if(storyChar(storyLines[i].who).side==='right') return storyLines[i].who;
+  return null;
+}
 function renderStoryLine(){
   const L=storyLines[storyIdx]; if(!L){ beginPlay(); return; }
   const c=storyChar(L.who), left=c.side==='left';
-  // only 2 characters on screen: MAME (left) + the current speaker (right slot swaps each line)
   if(left) $('vnMame').src=ver(c.src);
-  else { $('vnBoss').src=ver(c.src); $('vnBoss').style.display='block'; }
+  const rw=rightCharFor(storyIdx);          // right slot always shows the other party (stands there while MAME talks)
+  if(rw){ $('vnBoss').src=ver(storyChar(rw).src); $('vnBoss').style.display='block'; } else $('vnBoss').style.display='none';
   $('vnMame').classList.toggle('act', left);  $('vnMame').classList.toggle('dim', !left);
   $('vnBoss').classList.toggle('act', !left); $('vnBoss').classList.toggle('dim', left);
   $('vnName').className='vn-name '+c.cls;
   $('vnName').textContent=c.name;
-  // full-screen scene background reflects the speaker (Dog Planet for MAME, Pump capsule for the rest)
-  const story=$('story');
-  story.classList.toggle('bg-mame', L.who==='mame');
-  story.classList.toggle('bg-pump', c.cls==='boss' || L.who==='moodeng');
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
   typeInto($('vnText'), L.text, blipFor(L.who));
 }
