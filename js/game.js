@@ -43,7 +43,7 @@ function resetPlayerCommon(){
 function startStage(n){
   resetPlayerCommon(); bots.length=0;
   Object.assign(player,{ speed:3.5,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
-    fireRate:32,damage:10,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
+    fireRate:32,damage:100,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
   player.name='YOU'; const ch=CHARACTERS[selectedChar]; player.skin=ch.key; ch.apply(player);
   gameMode='campaign'; stage=n; lastStage=n; stageKills=0; bossPhase=0; warnTimer=0; curBoss=null;
   location.hash='campaign-'+n;
