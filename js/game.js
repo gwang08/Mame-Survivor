@@ -6,6 +6,7 @@ let gs = ST.MENU, time=0, frame=0, spawnTimer=0;
 let best = +(localStorage.getItem('mamesurvivor_best')||0);
 let maxUnlocked = +(localStorage.getItem('mame_unlocked')||1);
 let selectedChar = 0, paused = false;
+let DT = 1, lastTs = 0;                 // delta-time: 1.0 == 60fps (keeps speed constant on any FPS)
 const BOT_COUNT = 7;
 
 // ---- campaign maps & stages ----
@@ -39,7 +40,7 @@ function resetPlayerCommon(){
 // ---------- CAMPAIGN ----------
 function startStage(n){
   resetPlayerCommon(); bots.length=0;
-  Object.assign(player,{ speed:3,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
+  Object.assign(player,{ speed:3.5,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
     fireRate:32,damage:10,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
   player.name='YOU'; const ch=CHARACTERS[selectedChar]; player.skin=ch.key; ch.apply(player);
   gameMode='campaign'; stage=n; lastStage=n; stageKills=0; bossPhase=0; warnTimer=0; curBoss=null;
@@ -56,7 +57,7 @@ function stageClear(){
 // ---------- ARENA ----------
 function startArena(){
   resetPlayerCommon();
-  Object.assign(player,{ speed:3.1, baseSize:56, baseHp:120, baseDmg:11, grow:0,
+  Object.assign(player,{ speed:3.7, baseSize:56, baseHp:120, baseDmg:11, grow:0,
     fireRate:26, bullets:1, bulletSpeed:7.5, pierce:0, bulletSize:7, range:560, regen:0.2 });
   player.name='YOU'; player.skin=CHARACTERS[selectedChar].key;
   applyGrow(player,0); player.hp=player.maxHp;
@@ -97,24 +98,24 @@ function levelUp(){
 function update(){
   frame++; if(cam.shake>0) cam.shake*=0.9;
   if(gs!==ST.PLAY || paused){ updateParticles(); updateFloaters(); return; }
-  time+=1/60;
-  if(banner.life>0) banner.life--;
+  time+=DT/60;
+  if(banner.life>0) banner.life-=DT;
 
-  const v=moveVec();
-  player.x+=v.x*player.speed; player.y+=v.y*player.speed;
-  cam.x=lerp(cam.x,player.x,0.12); cam.y=lerp(cam.y,player.y,0.12);
+  const v=moveVec(), camf=Math.min(1,0.12*DT);
+  player.x+=v.x*player.speed*DT; player.y+=v.y*player.speed*DT;
+  cam.x=lerp(cam.x,player.x,camf); cam.y=lerp(cam.y,player.y,camf);
   if(player.regen>0 && frame%6===0) player.hp=Math.min(player.maxHp,player.hp+player.regen/10);
-  if(player.iframe>0) player.iframe--;
-  if(player.muzzle>0) player.muzzle--;
+  if(player.iframe>0) player.iframe-=DT;
+  if(player.muzzle>0) player.muzzle-=DT;
 
   // aim + fire toward mode-specific target (campaign prioritises the boss when in range)
   let target;
   if(gameMode==='arena') target=nearestRival(player);
   else target=(curBoss && dist2(curBoss.x,curBoss.y,player.x,player.y)<player.range*player.range) ? curBoss : nearestEnemy();
   if(target){ player.aim=Math.atan2(target.y-player.y,target.x-player.x); player.firing=true; } else player.firing=false;
-  if(player.fireCd>0) player.fireCd--; else { fire(); player.fireCd=player.fireRate; }
+  if(player.fireCd>0) player.fireCd-=DT; else { fire(); player.fireCd=player.fireRate; }
 
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.x+=b.vx; b.y+=b.vy; if(--b.life<=0) bullets.splice(i,1); }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.x+=b.vx*DT; b.y+=b.vy*DT; b.life-=DT; if(b.life<=0) bullets.splice(i,1); }
 
   if(gameMode==='arena') updateArena(); else updateCampaign();
   updateParticles(); updateFloaters();
@@ -123,16 +124,17 @@ function update(){
 function updateCampaign(){
   // minion spawning only while clearing (stop the flood once the boss is in)
   if(bossPhase===0){
-    if(--spawnTimer<=0){
-      for(let i=0;i<1+Math.floor(stage/6);i++) spawnWave(time + stage*8);
-      spawnTimer = Math.max(9, 36 - stage);
+    if((spawnTimer-=DT)<=0){
+      for(let i=0;i<3+Math.floor(stage/3);i++) spawnWave(time + stage*8);   // denser swarm while clearing
+      spawnTimer = Math.max(6, 22 - stage*0.5);
     }
   }
   if(bossPhase===0 && stageKills>=stageQuota(stage)){
     bossPhase=1; warnTimer=150;
     showBanner('⚠ WARNING', BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length].name+' INCOMING'); beep(160,0.5,'sawtooth',0.07);
   }
-  if(bossPhase===1 && --warnTimer<=0){
+  if(bossPhase===1 && (warnTimer-=DT)<=0){
+    enemies.length=0;                       // clear the swarm so the boss fight is 1-on-1
     bossPhase=2; curBoss=spawnStageBoss(stage); addShake(22);
     showBanner('BOSS', curBoss.name+'!'); beep(120,0.6,'sawtooth',0.08);
   }
@@ -144,10 +146,10 @@ function updateCampaign(){
   for(let ei=enemies.length-1;ei>=0;ei--){
     const e=enemies[ei];
     const ang=Math.atan2(player.y-e.y,player.x-e.x);
-    e.x+=Math.cos(ang)*e.speed; e.y+=Math.sin(ang)*e.speed;
-    if(e.hit>0)e.hit--;
+    e.x+=Math.cos(ang)*e.speed*DT; e.y+=Math.sin(ang)*e.speed*DT;
+    if(e.hit>0)e.hit-=DT;
     for(let oi=ei-1;oi>=0;oi--){ const o=enemies[oi]; const rr=(e.size+o.size)*0.35;
-      if(dist2(e.x,e.y,o.x,o.y)<rr*rr){ const a=Math.atan2(e.y-o.y,e.x-o.x); e.x+=Math.cos(a)*0.6; e.y+=Math.sin(a)*0.6; } }
+      if(dist2(e.x,e.y,o.x,o.y)<rr*rr){ const a=Math.atan2(e.y-o.y,e.x-o.x); e.x+=Math.cos(a)*0.6*DT; e.y+=Math.sin(a)*0.6*DT; } }
     for(let bi=bullets.length-1;bi>=0;bi--){
       const b=bullets[bi]; if(b.hits.includes(e)) continue;
       const rr=e.size*0.5+b.size;
@@ -180,7 +182,7 @@ function updateCampaign(){
   for(let gi=gems.length-1;gi>=0;gi--){
     const g=gems[gi], d2=dist2(g.x,g.y,player.x,player.y);
     if(d2<player.pickup*player.pickup){ const a=Math.atan2(player.y-g.y,player.x-g.x);
-      const pull=4+(player.pickup*player.pickup-d2)/2600; g.x+=Math.cos(a)*pull; g.y+=Math.sin(a)*pull; }
+      const pull=(4+(player.pickup*player.pickup-d2)/2600)*DT; g.x+=Math.cos(a)*pull; g.y+=Math.sin(a)*pull; }
     if(d2<28*28){ player.xp+=g.v; gems.splice(gi,1); beep(1200,0.04,'sine',0.02);
       if(player.xp>=player.xpNext) levelUp(); }
   }
@@ -455,4 +457,5 @@ sfxSlider.oninput  =()=>{ setSfxVol(sfxSlider.value/100);     $('sfxVal').textCo
 $('settingsBtn').onclick=()=>{ if(gs===ST.PLAY) paused=true; $('settings').style.display='flex'; };
 $('closeSettings').onclick=()=>{ $('settings').style.display='none'; if(gs===ST.PLAY) paused=false; };
 
-(function loop(){ update(); draw(); requestAnimationFrame(loop); })();
+(function loop(ts){ if(lastTs) DT=Math.max(0.3, Math.min(3.5, (ts-lastTs)/16.667)); lastTs=ts;
+  update(); draw(); requestAnimationFrame(loop); })();

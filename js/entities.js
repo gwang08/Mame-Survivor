@@ -48,7 +48,7 @@ function spawnEnemy(t, x, y, boss=false){
 }
 
 function spawnWave(elapsed){
-  if(enemies.length > 90) return;       // cap keeps FPS high (O(n^2) separation)
+  if(enemies.length > 150) return;      // cap keeps FPS high (O(n^2) separation)
   const radius = Math.max(VW,VH)*0.62 + 80, ang = Math.random()*7;
   const x = player.x + Math.cos(ang)*radius, y = player.y + Math.sin(ang)*radius;
   const hard = elapsed/60; // minutes survived

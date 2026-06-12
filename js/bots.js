@@ -44,9 +44,9 @@ function nearestRival(self){ let best=null,bd=560*560; const list=[player,...bot
 
 function updateBots(){
   for(const b of bots){
-    if(!b.alive){ if(--b.respawn<=0){ const a=Math.random()*7; b.x=player.x+Math.cos(a)*620; b.y=player.y+Math.sin(a)*620;
+    if(!b.alive){ if((b.respawn-=DT)<=0){ const a=Math.random()*7; b.x=player.x+Math.cos(a)*620; b.y=player.y+Math.sin(a)*620;
         b.grow=rand(0,8); applyGrow(b,0); b.hp=b.maxHp; b.alive=true; b.iframe=40; } continue; }
-    if(b.iframe>0)b.iframe--;
+    if(b.iframe>0)b.iframe-=DT;
     const rival=nearestRival(b), gem=nearestGemTo(b.x,b.y);
     let mx=0,my=0;
     if(rival){ const dx=rival.x-b.x, dy=rival.y-b.y, d=Math.hypot(dx,dy)||1;
@@ -54,14 +54,14 @@ function updateBots(){
       else if(gem){ const gx=gem.x-b.x,gy=gem.y-b.y,gd=Math.hypot(gx,gy)||1; mx=gx/gd; my=gy/gd; }  // grab food
       else { mx=dx/d*0.6; my=dy/d*0.6; }
       b.aim=Math.atan2(dy,dx);
-      if(--b.fireCd<=0){ b.fireCd=b.fireRate;
+      if((b.fireCd-=DT)<=0){ b.fireCd=b.fireRate;
         bullets.push({ x:b.x,y:b.y, vx:Math.cos(b.aim)*b.bulletSpeed, vy:Math.sin(b.aim)*b.bulletSpeed,
           dmg:b.damage, pierce:0, size:6, life:80, hits:[], from:b }); }
     } else if(gem){ const gx=gem.x-b.x,gy=gem.y-b.y,gd=Math.hypot(gx,gy)||1; mx=gx/gd; my=gy/gd; }
     else { mx=Math.cos(frame*0.02+b.x); my=Math.sin(frame*0.02+b.y); }
     for(const o of bots){ if(o===b||!o.alive)continue; const dx=b.x-o.x,dy=b.y-o.y,d2=dx*dx+dy*dy;
       if(d2<90*90&&d2>0){ const d=Math.sqrt(d2); mx+=dx/d*0.5; my+=dy/d*0.5; } }
-    const m=Math.hypot(mx,my)||1; b.x+=mx/m*b.speed; b.y+=my/m*b.speed;
+    const m=Math.hypot(mx,my)||1; b.x+=mx/m*b.speed*DT; b.y+=my/m*b.speed*DT;
   }
 }
 
