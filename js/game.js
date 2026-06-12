@@ -43,7 +43,7 @@ function resetPlayerCommon(){
 function startStage(n){
   resetPlayerCommon(); bots.length=0;
   Object.assign(player,{ speed:3.5,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
-    fireRate:32,damage:400,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
+    fireRate:32,damage:140,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
   player.name='YOU'; const ch=CHARACTERS[selectedChar]; player.skin=ch.key; ch.apply(player);
   gameMode='campaign'; stage=n; lastStage=n; stageKills=0; bossPhase=0; warnTimer=0; curBoss=null;
   location.hash='campaign-'+n;
@@ -124,7 +124,7 @@ function showTransition(nextStage){
   const act=actOf(stage), boss=BOSS_ROSTER[act];
   transFinal = stage>=TOTAL_STAGES;
   $('transTitle').textContent = transFinal ? 'PUMP CORE CLEARED' : 'STAGE '+stage+' CLEARED';
-  $('transBoss').src=ver('assets/'+boss.img+'.png');     // defeated boss flees on the Pump.fun ship
+  $('transFlee').src=ver('assets/'+boss.img.replace('boss-','flee-')+'.png');   // single image: boss riding the Pump ship
   $('transNext').textContent = transFinal ? 'TO BE CONTINUED ▶' : '▶ NEXT STAGE';
   transLines=STORY.stages[act].outro||[]; transIdx=0;
   // starfield so the sky isn't empty
