@@ -20,13 +20,15 @@ const sy = y => y - cam.y + VH/2;   // world -> screen Y
 
 // ---- audio (tiny WebAudio SFX) ----
 let AC, muted=false;
+let sfxVol  = parseFloat(localStorage.getItem('mame_sfxvol')  ?? '0.8');   // 0..1
+let musicVol= parseFloat(localStorage.getItem('mame_musicvol') ?? '0.5');  // 0..1
 function ensureAC(){ try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); return AC; }catch(e){ return null; } }
 function beep(freq, dur, type='square', vol=0.05){
-  if(muted) return;
+  if(muted || sfxVol<=0) return;
   try{
     AC = AC || new (window.AudioContext||window.webkitAudioContext)();
     const o = AC.createOscillator(), g = AC.createGain();
-    o.type=type; o.frequency.value=freq; g.gain.value=vol;
+    o.type=type; o.frequency.value=freq; g.gain.value=vol*sfxVol;
     o.connect(g); g.connect(AC.destination); o.start();
     o.frequency.exponentialRampToValueAtTime(freq*0.6, AC.currentTime+dur);
     g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);

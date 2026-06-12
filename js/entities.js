@@ -67,7 +67,7 @@ function fire(){
   for(let i=0;i<player.bullets;i++){
     const a = base + (i-(player.bullets-1)/2)*spread;
     bullets.push({ x:player.x, y:player.y, vx:Math.cos(a)*player.bulletSpeed, vy:Math.sin(a)*player.bulletSpeed,
-                   dmg:player.damage, pierce:player.pierce, size:player.bulletSize, life:80, hits:[] });
+                   dmg:player.damage, pierce:player.pierce, size:player.bulletSize, life:80, hits:[], from:player });
   }
   player.muzzle = 5;             // flash frames
   gunshot();

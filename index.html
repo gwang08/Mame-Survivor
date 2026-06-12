@@ -71,6 +71,20 @@
   #muteBtn{ position:fixed; top:46px; right:12px; z-index:8; width:42px; height:42px; font-size:20px; cursor:pointer;
     background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; }
   #muteBtn:active{ transform:scale(.92); }
+  /* mode toggle (menu) */
+  .modes{ display:flex; gap:12px; }
+  .mode{ cursor:pointer; padding:9px 18px; border-radius:12px; font-weight:900; font-size:14px; color:#1a1a1a;
+    background:#fff8d6; border:3px solid #1a1a1a; box-shadow:3px 4px 0 #1a1a1a; display:flex; flex-direction:column; align-items:center; line-height:1.15; }
+  .mode small{ font-weight:normal; font-size:10px; color:#666; margin-top:2px; }
+  .mode.sel{ background:#ffd400; box-shadow:5px 6px 0 #1a1a1a; transform:translateY(-2px); }
+  /* settings */
+  #settingsBtn{ position:fixed; top:46px; right:62px; z-index:8; width:42px; height:42px; font-size:20px; cursor:pointer;
+    background:rgba(20,18,40,.6); color:#fff; border:2px solid #ffffff33; border-radius:10px; }
+  #settingsBtn:active{ transform:scale(.92); }
+  .spanel{ gap:16px; min-width:300px; }
+  .srow{ display:flex; align-items:center; gap:12px; font-size:16px; font-weight:bold; color:#fff; width:100%; }
+  .srow input[type=range]{ flex:1; accent-color:#ffd45e; height:6px; }
+  .srow span{ width:34px; text-align:right; color:var(--gold); }
 </style>
 </head>
 <body>
@@ -91,6 +105,11 @@
     <p class="tag">Swarmed by rival meme coins (Pepe, Shib, Floki, Bonk) wielding knives &amp; hammers. Auto-fire, grab 💎 to level up, pick power-ups — survive! Beware the <b>BOSS Doge</b> 🔥</p>
     <div class="pick">CHOOSE YOUR DOGE</div>
     <div id="charSelect" class="chars"></div>
+    <div class="pick">MODE</div>
+    <div id="modeSelect" class="modes">
+      <button class="mode sel" data-mode="coop">🤝 CO-OP<small>race for kills</small></button>
+      <button class="mode" data-mode="pvp">⚔️ PvP<small>fight everyone</small></button>
+    </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
     <div class="small">💻 WASD / Arrow keys &nbsp;•&nbsp; 📱 Drag to move</div>
@@ -112,11 +131,26 @@
   <button class="btn" id="retryBtn">↻ RETRY</button>
 </div>
 
+<audio id="bgm" src="assets/nhacnen.mp3" loop preload="auto"></audio>
+
+<button id="settingsBtn" title="Settings">⚙️</button>
 <button id="muteBtn" title="Mute / Unmute">🔊</button>
-<div id="hint">HODL to the moon 🚀 — github.com/gwang08/FlappyDoge</div>
+
+<!-- SETTINGS / PAUSE -->
+<div class="overlay" id="settings" style="display:none">
+  <div class="panel spanel">
+    <h2 style="color:var(--gold)">⚙️ SETTINGS</h2>
+    <label class="srow">🎵 Music<input type="range" id="musicSlider" min="0" max="100" value="50"><span id="musicVal">50</span></label>
+    <label class="srow">🔫 SFX<input type="range" id="sfxSlider" min="0" max="100" value="80"><span id="sfxVal">80</span></label>
+    <button class="btn" id="closeSettings">✓ DONE</button>
+  </div>
+</div>
+
+<div id="hint">HODL to the moon 🚀 — mamesurvivor.fun</div>
 
 <script src="js/core.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/bots.js"></script>
 <script src="js/entities.js"></script>
 <script src="js/upgrades.js"></script>
 <script src="js/game.js"></script>
