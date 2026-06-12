@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Mame Survivor 🐕🔥 — Survive the Meme Coins</title>
 <meta name="description" content="Mame Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
-<link rel="icon" type="image/png" href="assets/favicon.png?v=16" />
-<link rel="apple-touch-icon" href="assets/favicon.png?v=16" />
+<link rel="icon" type="image/png" href="assets/favicon.png?v=18" />
+<link rel="apple-touch-icon" href="assets/favicon.png?v=18" />
 <style>
   :root{ --gold:#ffd45e; --cyan:#36d6ff; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
@@ -141,14 +141,31 @@
   .decor{ position:absolute; transform:translate(-50%,-50%); pointer-events:none; z-index:1; filter:drop-shadow(0 0 14px #4dd2ff77); }
   .decor img{ width:100%; height:100%; object-fit:contain; }
   .spark{ position:absolute; border-radius:50%; background:#fff; pointer-events:none; z-index:0; }
-  /* story cutscene */
-  #story{ background:radial-gradient(circle at 50% 30%, #1a1340, #05040d 75%); }
-  .storyp{ max-width:560px; background:linear-gradient(180deg,#15122e,#0b0a1c); border:2px solid #ffd45e55;
-    box-shadow:0 0 50px rgba(255,212,94,.18); backdrop-filter:none; gap:16px; }
-  .story-title{ font-size:clamp(24px,6vw,38px); font-weight:900; letter-spacing:1px; color:#ffd45e;
-    text-shadow:0 0 20px rgba(255,212,94,.5); }
-  .story-text{ font-size:clamp(14px,3.4vw,17px); line-height:1.7; color:#dfe3ff; max-width:500px; }
-  .story-text .taunt{ color:#ff7a9c; font-style:italic; font-weight:bold; }
+  /* story dialogue (visual-novel) */
+  #story{ background:radial-gradient(circle at 50% 25%, #241a52, #05040d 78%); justify-content:flex-end; gap:0; padding:0; cursor:pointer; }
+  .vn-title{ position:absolute; top:18px; left:0; right:0; text-align:center; font-size:clamp(18px,5vw,30px); font-weight:900;
+    letter-spacing:2px; color:#ffd45e; text-shadow:0 0 18px rgba(255,212,94,.5); }
+  .vn-stage{ position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 4vw 180px; pointer-events:none; }
+  .vn-char{ height:min(56vh,460px); max-width:46%; object-fit:contain; transition:transform .25s, filter .25s, opacity .25s;
+    filter:drop-shadow(0 12px 30px rgba(0,0,0,.6)); }
+  .vn-char.left{ transform:scaleX(-1); }                 /* MAME faces the boss */
+  .vn-char.dim{ filter:brightness(.45) drop-shadow(0 12px 30px rgba(0,0,0,.6)); opacity:.7; }
+  .vn-char.act{ transform:scale(1.04); } .vn-char.left.act{ transform:scaleX(-1) scale(1.04); }
+  .vn-box{ position:relative; z-index:2; width:min(860px,94%); margin:0 auto 26px; background:linear-gradient(180deg,#16132e,#0c0a1e);
+    border:3px solid #ffd45e; border-radius:18px; padding:18px 24px 30px; box-shadow:0 0 40px rgba(255,212,94,.25); text-align:left; }
+  .vn-name{ font-size:clamp(16px,4vw,22px); font-weight:900; color:#ffd45e; margin-bottom:6px; letter-spacing:1px; }
+  .vn-name.boss{ color:#ff6b6b; } .vn-name.narrator{ color:#9fb0ff; }
+  .vn-text{ font-size:clamp(15px,3.6vw,20px); line-height:1.6; color:#fff; min-height:3.2em; }
+  .vn-hint{ position:absolute; right:18px; bottom:8px; font-size:12px; color:#ffffff80; }
+  .vn-skip{ position:absolute; top:16px; right:16px; z-index:3; padding:8px 16px; font-weight:900; font-size:13px; letter-spacing:1px;
+    color:#fff; background:rgba(255,255,255,.12); border:2px solid #ffffff44; border-radius:10px; cursor:pointer; transition:transform .12s, background .12s; }
+  .vn-skip:hover{ transform:scale(1.06); background:rgba(255,212,94,.25); border-color:#ffd45e; }
+  @media (max-width:600px), (max-height:560px){
+    .vn-char{ height:min(40vh,300px); max-width:48%; }
+    .vn-stage{ padding:48px 2vw 168px; align-items:flex-start; }
+    .vn-box{ margin-bottom:16px; padding:14px 16px 26px; border-width:2px; }
+    .vn-title{ top:12px; }
+  }
   /* social icons + panel sizing */
   #menu .panel{ max-height:88vh; overflow-y:auto; gap:9px; padding:20px 26px; }
   #menu .char{ padding:10px; } #menu .char img{ width:64px; height:64px; }
@@ -181,8 +198,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=16" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
-      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=16" alt="Arena">ARENA<small>battle · grow · rank</small></button>
+      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=18" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
+      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=18" alt="Arena">ARENA<small>battle · grow · rank</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -228,12 +245,18 @@
   <button class="btn" id="winHome">← HOME</button>
 </div>
 
-<!-- STORY CUTSCENE -->
+<!-- STORY DIALOGUE (visual-novel) -->
 <div class="overlay" id="story" style="display:none">
-  <div class="panel storyp">
-    <div id="storyTitle" class="story-title">ACT I</div>
-    <div id="storyText" class="story-text"></div>
-    <button class="btn" id="storyGo">CONTINUE ▶</button>
+  <button id="vnSkip" class="vn-skip">SKIP ⏭</button>
+  <div id="vnTitle" class="vn-title">ACT I</div>
+  <div class="vn-stage">
+    <img id="vnMame" class="vn-char left" alt="">
+    <img id="vnBoss" class="vn-char right" alt="">
+  </div>
+  <div class="vn-box">
+    <div id="vnName" class="vn-name">MAME</div>
+    <div id="vnText" class="vn-text"></div>
+    <div class="vn-hint" id="vnHint">▶ tap to continue</div>
   </div>
 </div>
 
@@ -247,7 +270,7 @@
   <button class="btn" id="overHome">← HOME</button>
 </div>
 
-<audio id="bgm" src="assets/nhacnen.mp3?v=16" loop preload="auto"></audio>
+<audio id="bgm" src="assets/nhacnen.mp3?v=18" loop preload="auto"></audio>
 
 <button id="homeBtn" title="Home" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
 <button id="settingsBtn" title="Settings">⚙️</button>
@@ -265,12 +288,12 @@
 
 <div id="hint">HODL to the moon 🚀 — mamesurvivor.fun</div>
 
-<script src="js/core.js?v=16"></script>
-<script src="js/audio.js?v=16"></script>
-<script src="js/bots.js?v=16"></script>
-<script src="js/entities.js?v=16"></script>
-<script src="js/upgrades.js?v=16"></script>
-<script src="js/story.js?v=16"></script>
-<script src="js/game.js?v=16"></script>
+<script src="js/core.js?v=18"></script>
+<script src="js/audio.js?v=18"></script>
+<script src="js/bots.js?v=18"></script>
+<script src="js/entities.js?v=18"></script>
+<script src="js/upgrades.js?v=18"></script>
+<script src="js/story.js?v=18"></script>
+<script src="js/game.js?v=18"></script>
 </body>
 </html>

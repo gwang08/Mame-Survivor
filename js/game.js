@@ -52,13 +52,26 @@ function beginPlay(){
   showBanner('STAGE '+stage, curMap().name);
   gs=ST.PLAY; hideOverlays(); startAudio();
 }
+let storyLines=[], storyIdx=0;
 function showStory(act){
-  const a=STORY.acts[act];
-  $('storyTitle').textContent=a.title;
-  $('storyText').innerHTML = (act===0 ? STORY.intro+'<br><br>' : '') + a.text
-    + '<br><br><span class="taunt">'+a.boss+': '+a.taunt+'</span>';
+  const a=STORY.acts[act], boss=BOSS_ROSTER[act];
+  $('vnTitle').textContent=a.title;
+  $('vnMame').src=ver(CHARACTERS[selectedChar].file);
+  $('vnBoss').src=ver('assets/'+boss.img+'.png');
+  storyLines=a.dialogue; storyIdx=0;
   hideOverlays(); $('story').style.display='flex'; gs=ST.STORY; startAudio();
+  renderStoryLine();
 }
+function renderStoryLine(){
+  const L=storyLines[storyIdx]; if(!L){ beginPlay(); return; }
+  const who=L.who, mame=$('vnMame'), bss=$('vnBoss');
+  $('vnName').className='vn-name'+(who==='boss'?' boss':who==='narrator'?' narrator':'');
+  $('vnName').textContent = who==='boss' ? BOSS_ROSTER[actOf(stage)].name : who==='narrator' ? '— STORY —' : 'MAME';
+  $('vnText').textContent=L.text;
+  mame.classList.toggle('act', who==='mame'); mame.classList.toggle('dim', who!=='mame');
+  bss.classList.toggle('act', who==='boss');  bss.classList.toggle('dim', who!=='boss');
+}
+function storyAdvance(){ if(gs!==ST.STORY) return; storyIdx++; if(storyIdx>=storyLines.length) beginPlay(); else renderStoryLine(); }
 function stageClear(){
   if(stage>=TOTAL_STAGES){ win(); return; }
   maxUnlocked=Math.max(maxUnlocked, stage+1); localStorage.setItem('mame_unlocked',maxUnlocked);
@@ -440,7 +453,8 @@ renderCharSelect();
 $('startBtn').onclick=()=>{ gameMode==='arena' ? startArena() : enterCampaign(); };
 $('retryBtn').onclick=()=>{ gameMode==='arena' ? startArena() : startStage(lastStage); };
 $('winRetry').onclick=()=>{ startStage(1); };
-$('storyGo').onclick=()=>{ beginPlay(); };
+$('story').onclick=()=>{ storyAdvance(); };
+$('vnSkip').onclick=(e)=>{ e.stopPropagation(); beginPlay(); };
 $('winHome').onclick=()=>{ backToMenu(); };
 $('overHome').onclick=()=>{ backToMenu(); };
 $('homeBtn').onclick=()=>{ backToMenu(); };
