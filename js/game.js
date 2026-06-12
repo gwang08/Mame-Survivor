@@ -19,7 +19,7 @@ const MAPS = [
 ];
 const ARENA_THEME = { name:'ARENA', bg:'#0a0f1e', grid:'#4dd2ff18' };
 const TOTAL_STAGES = 3;            // playable story stages (rest are "UPDATE SOON")
-const SOON_NODES   = 5;            // locked teaser nodes shown after stage 3
+const SOON_NODES   = 1;            // single "UPDATE SOON" teaser node after stage 3
 const TOTAL_NODES  = TOTAL_STAGES + SOON_NODES;
 let stage=1, stageKills=0, bossPhase=0, warnTimer=0, curBoss=null;
 let lastStage=1;
@@ -53,7 +53,7 @@ function startStage(n){
 function storyChar(who){
   switch(who){
     case 'mame':     return { name:'MAME',           src:CHARACTERS[selectedChar].file, side:'left',  cls:'' };
-    case 'moodeng':  return { name:'MOO DENG',        src:'assets/moodeng.png',          side:'left',  cls:'moodeng' };
+    case 'moodeng':  return { name:'MOO DENG',        src:'assets/moodeng.png',          side:'mid',   cls:'moodeng' };
     case 'asteroid': return { name:'ASTEROID SHIBA',  src:'assets/boss-asteroid.png',    side:'right', cls:'boss' };
     case 'chillguy': return { name:'CHILLGUY',        src:'assets/boss-chillguy.png',    side:'right', cls:'boss' };
     case 'penguin':  return { name:'PENGUIN',         src:'assets/boss-penguin.png',     side:'right', cls:'boss' };
@@ -81,11 +81,12 @@ const blipFor = who => who==='boss'?170 : who==='mame'?500 : 320;
 function showStory(si){
   const s=STORY.stages[si];
   $('vnTitle').textContent=s.title;
-  // preset both slots so neither portrait is blank (left = good, right = villain)
-  const fl=s.intro.find(l=>storyChar(l.who).side==='left');
+  // MAME is always the left protagonist; right = villain; center = Moo Deng (only if she's in the scene)
+  $('vnMame').src=ver(CHARACTERS[selectedChar].file);
   const fr=s.intro.find(l=>storyChar(l.who).side==='right');
-  $('vnMame').src=ver(storyChar(fl?fl.who:'mame').src);
   $('vnBoss').src=ver(storyChar(fr?fr.who:'asteroid').src);
+  const md=$('vnMid'), hasMd=s.intro.some(l=>l.who==='moodeng');
+  md.style.display=hasMd?'block':'none'; if(hasMd) md.src=ver('assets/moodeng.png');
   storyLines=s.intro; storyIdx=0;
   hideOverlays(); $('story').style.display='flex'; gs=ST.STORY; startAudio();
   if(bgm && !muted) bgm.volume = musicVol*0.4;   // duck music during dialogue
@@ -93,13 +94,18 @@ function showStory(si){
 }
 function renderStoryLine(){
   const L=storyLines[storyIdx]; if(!L){ beginPlay(); return; }
-  const c=storyChar(L.who), left=c.side==='left', mame=$('vnMame'), bss=$('vnBoss');
-  (left?mame:bss).src=ver(c.src);                 // speaker takes its side's slot
+  const c=storyChar(L.who), side=c.side;
+  // the speaker takes its slot; everyone else dims
+  if(side==='left') $('vnMame').src=ver(c.src); else if(side==='right') $('vnBoss').src=ver(c.src);
+  for(const [id,sd] of [['vnMame','left'],['vnMid','mid'],['vnBoss','right']]){
+    $(id).classList.toggle('act', side===sd); $(id).classList.toggle('dim', side!==sd);
+  }
   $('vnName').className='vn-name '+c.cls;
   $('vnName').textContent=c.name;
-  const box=$('vnBox'); box.classList.toggle('bg-mame', L.who==='mame'); box.classList.toggle('bg-pump', c.cls==='boss'||L.who==='moodeng');
-  mame.classList.toggle('act', left);  mame.classList.toggle('dim', !left);
-  bss.classList.toggle('act', !left);  bss.classList.toggle('dim', left);
+  // full-screen scene background reflects the speaker (Dog Planet for MAME, Pump capsule for the rest)
+  const story=$('story');
+  story.classList.toggle('bg-mame', L.who==='mame');
+  story.classList.toggle('bg-pump', c.cls==='boss' || L.who==='moodeng');
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
   typeInto($('vnText'), L.text, blipFor(L.who));
 }
@@ -498,19 +504,18 @@ function buildStageSelect(){
     s+=`<circle cx="${(-r*0.4).toFixed(0)}" cy="${(-r*0.42).toFixed(0)}" r="${(r*0.18).toFixed(0)}" fill="#fff" opacity=".5"/></g>`; return s; };
   const PAL=[['#9fd8ff','#1f5a9e','#7fd0ff'],['#ffcaa0','#b8551f',0],['#d8b0ff','#5a2f9e','#c9a0ff'],['#a0ffc8','#2f9e5a',0],['#ffe08a','#b8860b','#ffd45e'],['#ff9fc0','#9e2f5a',0]];
   let pl='';
-  for(let i=0;i<9;i++){ const c=PAL[i%PAL.length], r=rand(16,44), p=pos(i*5+3);
-    const sideX = (i%2? rand(W*0.62,W-30) : rand(30,W*0.34));   // keep off the central trail
-    pl+=planet(sideX, clamp(p.y+rand(-40,40),50,H-50), r, c[0], c[1], c[2]); }
+  for(let i=0;i<5;i++){ const c=PAL[i%PAL.length], r=rand(18,40);
+    const sideX = (i%2? rand(W*0.66,W-34) : rand(34,W*0.30));   // edges only, off the central trail
+    pl+=planet(sideX, padTop+rand(20,H-padTop-60), r, c[0], c[1], c[2]); }
   let pts=''; for(let n=1;n<=TOTAL_NODES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
   let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st+pl
     +'<polyline points="'+pts+'" fill="none" stroke="#ffffff55" stroke-width="3" stroke-dasharray="2 13" stroke-linecap="round"/></svg>';
-  // boss mascots drifting in space — big & clearly visible, cycling all of them
-  let di=0;
-  for(let n=1;n<=TOTAL_NODES;n+=2){ const p=pos(n), side=(Math.sin(n*0.62)>0)?-1:1, img=MAP_DECOR[di++ % MAP_DECOR.length];
-    const sz=72+(di%3)*14;
-    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.5,sz/2+8,W-sz/2-8).toFixed(0)+'px;top:'+(p.y+60).toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+ver(img)+'"></div>'; }
+  // each stage's boss mascot floats beside its node (intentional, not random)
+  for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), side=(Math.sin(n*0.62)>0)?-1:1, sz=96;
+    const dx=clamp(p.x+side*128, sz/2+6, W-sz/2-6);
+    h+='<div class="decor" style="left:'+dx.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+ver('assets/'+BOSS_ROSTER[n-1].img+'.png')+'"></div>'; }
   // sector label
-  { const p=pos(1); h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-50).toFixed(0)+'px">★ THE PUMP.FUN WAR ★</div>'; }
+  { const p=pos(1); h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-52).toFixed(0)+'px">★ THE PUMP.FUN WAR ★</div>'; }
   for(let n=1;n<=TOTAL_NODES;n++){ const p=pos(n);
     if(n<=TOTAL_STAGES){
       const locked=n>maxUnlocked, cur=n===maxUnlocked, region=actOf(n), stars=n<maxUnlocked?'★★★':'';

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Mame Survivor 🐕🔥 — Survive the Meme Coins</title>
 <meta name="description" content="Mame Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
-<link rel="icon" type="image/png" href="assets/favicon.png?v=30" />
-<link rel="apple-touch-icon" href="assets/favicon.png?v=30" />
+<link rel="icon" type="image/png" href="assets/favicon.png?v=31" />
+<link rel="apple-touch-icon" href="assets/favicon.png?v=31" />
 <style>
   :root{ --gold:#ffd45e; --cyan:#36d6ff; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
@@ -163,11 +163,23 @@
   /* per-speaker dialogue backgrounds */
   .vn-box.bg-mame{ border-color:#7fb6ff; background:
     linear-gradient(180deg,rgba(8,10,28,.78),rgba(8,10,28,.9)),
-    url('assets/dogplanet.png?v=30') center/cover no-repeat; }
+    url('assets/dogplanet.png?v=31') center/cover no-repeat; }
   .vn-box.bg-pump{ border-color:#39d98a; background:
     linear-gradient(90deg,rgba(8,22,17,.93) 42%,rgba(8,22,17,.5)),
-    url('assets/pump-pill.png?v=30') right 14px center/auto 128% no-repeat,
+    url('assets/pump-pill.png?v=31') right 14px center/auto 128% no-repeat,
     linear-gradient(180deg,#11271d,#0a160f); }
+  /* full-screen scene background behind the characters (per speaker) */
+  #story.bg-mame{ background:
+    linear-gradient(180deg,rgba(6,8,24,.58),rgba(6,8,24,.82)),
+    url('assets/dogplanet.png?v=31') center/cover no-repeat; }
+  #story.bg-pump{ background:
+    radial-gradient(circle at 50% 42%, rgba(20,64,46,.45), rgba(5,14,10,.9)),
+    url('assets/pump-pill.png?v=31') center/min(40vw,360px) no-repeat, #0a160f; }
+  /* third (center) character slot — Moo Deng pleading with MAME */
+  .vn-char.mid{ position:absolute; left:50%; top:50%; transform:translate(-50%,-54%);
+    height:min(42vh,330px); max-width:34%; z-index:1; }
+  .vn-char.mid.act{ transform:translate(-50%,-54%) scale(1.05); }
+  .vn-char.mid.dim{ filter:brightness(.5) drop-shadow(0 12px 30px rgba(0,0,0,.6)); opacity:.7; }
   .vn-name{ font-size:clamp(16px,4vw,22px); font-weight:900; color:#ffd45e; margin-bottom:6px; letter-spacing:1px; }
   .vn-name.boss{ color:#ff6b6b; } .vn-name.narrator{ color:#9fb0ff; }
   .vn-text{ font-size:clamp(15px,3.6vw,20px); line-height:1.6; color:#fff; min-height:3.2em; }
@@ -238,8 +250,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=30" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
-      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=30" alt="Arena">ARENA<small>battle · grow · rank</small></button>
+      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=31" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
+      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=31" alt="Arena">ARENA<small>battle · grow · rank</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -291,6 +303,7 @@
   <div id="vnTitle" class="vn-title">ACT I</div>
   <div class="vn-stage">
     <img id="vnMame" class="vn-char left" alt="">
+    <img id="vnMid" class="vn-char mid" alt="" style="display:none">
     <img id="vnBoss" class="vn-char right" alt="">
   </div>
   <div class="vn-box" id="vnBox">
@@ -336,7 +349,7 @@
   <button class="btn" id="overHome">← HOME</button>
 </div>
 
-<audio id="bgm" src="assets/nhacnen.mp3?v=30" loop preload="auto"></audio>
+<audio id="bgm" src="assets/nhacnen.mp3?v=31" loop preload="auto"></audio>
 
 <button id="homeBtn" title="Home" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
 <button id="settingsBtn" title="Settings">⚙️</button>
