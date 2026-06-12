@@ -51,4 +51,10 @@ const STORY = {
   ],
   ending: 'Every warlord crushed. $MAME breaks orbit and rockets past the moon — the chart goes vertical, green forever. The loyal Doge is the CHAIN KING now. 🐕👑🚀',
 };
+// special one-time transition after STAGE 1: Moo Deng flies in and blocks MAME
+STORY.stage1Trans = [
+  { who:'boss',    text:'Heh! Catch me if you can — the Pump fleet is mine!' },
+  { who:'moodeng', text:'Wait!! What are you doing?! Are you trying to KILL my friend?!' },
+  { who:'mame',    text:'Stand aside, Moo Deng. I have to chase him down — I will avenge my friend.' },
+];
 function actOf(stage){ return Math.floor((stage-1)/10) % STORY.acts.length; }   // 0..4

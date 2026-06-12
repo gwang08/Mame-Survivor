@@ -97,8 +97,15 @@ function showTransition(nextStage){
   transNextStage=nextStage;
   const act=actOf(stage), boss=BOSS_ROSTER[act];
   $('transTitle').textContent='STAGE '+stage+' CLEARED';
-  $('transBoss').src=ver('assets/'+boss.img+'.png');     // boss rides the chrome ship; MAME rides mame-ship.png (static)
-  transLines=STORY.acts[act].outro||[]; transIdx=0;
+  $('transBoss').src=ver('assets/'+boss.img+'.png');     // boss rides the Pump.fun ship; MAME rides mame-ship.png
+  const md=$('transMoodeng');
+  if(stage===1){                                         // one-time: Moo Deng flies in to block MAME
+    transLines=STORY.stage1Trans;
+    md.style.display='block'; md.classList.remove('go'); void md.offsetWidth; md.classList.add('go');
+  } else {
+    transLines=STORY.acts[act].outro||[]; md.style.display='none';
+  }
+  transIdx=0;
   // starfield so the sky isn't empty
   let st=''; for(let i=0;i<90;i++) st+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*100).toFixed(1)+'%;width:'+(Math.random()*2+1).toFixed(1)+'px;height:'+(Math.random()*2+1).toFixed(1)+'px;opacity:'+(0.2+Math.random()*0.6).toFixed(2)+'"></i>';
   $('transStars').innerHTML=st;
@@ -111,11 +118,13 @@ function showTransition(nextStage){
 }
 function renderTransLine(){
   const L=transLines[transIdx]; if(!L) return;
-  const isBoss=L.who==='boss';
-  $('transName').className='vn-name'+(isBoss?' boss':'');
-  $('transName').textContent = isBoss ? BOSS_ROSTER[actOf(stage)].name : 'MAME';
-  $('transPortrait').src = isBoss ? ver('assets/'+BOSS_ROSTER[actOf(stage)].img+'.png') : ver(CHARACTERS[selectedChar].file);  // speaker face on the left
-  typeInto($('transText'), L.text, blipFor(L.who));
+  const who=L.who;
+  $('transName').className='vn-name'+(who==='boss'?' boss':who==='moodeng'?' moodeng':'');
+  $('transName').textContent = who==='boss' ? BOSS_ROSTER[actOf(stage)].name : who==='moodeng' ? 'MOO DENG' : 'MAME';
+  $('transPortrait').src = who==='boss'    ? ver('assets/'+BOSS_ROSTER[actOf(stage)].img+'.png')
+                         : who==='moodeng' ? ver('assets/moodeng.png')
+                         : ver(CHARACTERS[selectedChar].file);   // speaker face on the left
+  typeInto($('transText'), L.text, blipFor(who));
 }
 function transAdvance(){
   if(gs!==ST.TRANS) return;
