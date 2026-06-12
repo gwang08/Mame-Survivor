@@ -81,6 +81,7 @@ function renderStoryLine(){
   const who=L.who, mame=$('vnMame'), bss=$('vnBoss');
   $('vnName').className='vn-name'+(who==='boss'?' boss':who==='narrator'?' narrator':'');
   $('vnName').textContent = who==='boss' ? BOSS_ROSTER[actOf(stage)].name : who==='narrator' ? '— STORY —' : 'MAME';
+  const box=$('vnBox'); box.classList.toggle('bg-mame', who==='mame'); box.classList.toggle('bg-pump', who==='boss');
   mame.classList.toggle('act', who==='mame'); mame.classList.toggle('dim', who!=='mame');
   bss.classList.toggle('act', who==='boss');  bss.classList.toggle('dim', who!=='boss');
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
@@ -124,6 +125,7 @@ function renderTransLine(){
   $('transPortrait').src = who==='boss'    ? ver('assets/'+BOSS_ROSTER[actOf(stage)].img+'.png')
                          : who==='moodeng' ? ver('assets/moodeng.png')
                          : ver(CHARACTERS[selectedChar].file);   // speaker face on the left
+  const tbox=$('transBox'); tbox.classList.toggle('bg-mame', who==='mame'); tbox.classList.toggle('bg-pump', who==='boss'||who==='moodeng');
   typeInto($('transText'), L.text, blipFor(who));
 }
 function transAdvance(){
