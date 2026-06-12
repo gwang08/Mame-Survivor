@@ -5,12 +5,12 @@ const STORY = {
     { title:'ACT I · DEEP SPACE', world:'DEEP SPACE', dialogue:[
       { who:'narrator', text:'The market is bleeding red. Rival meme-coin warlords seized the galaxy to crash $MAME into the void. One loyal Doge sets off for the MOON...' },
       { who:'boss', text:'Such empty wallet. Much weak. Wow.' },
-      { who:'mame', text:'Step aside, Monarch — the Moon is mine to reach.' },
+      { who:'mame', text:'Step aside, Asteroid Shiba — the Moon is mine to reach.' },
       { who:'boss', text:'You? A nobody coin? This gate stays shut.' },
       { who:'mame', text:'Then I’ll open it with your liquidation. Let’s go.' },
     ], outro:[
       { who:'boss', text:'Gah! You win this gate… but catch me if you can!' },
-      { who:'mame', text:'You can’t escape, Monarch! To the next sector — after him!' },
+      { who:'mame', text:'You can’t escape, Asteroid Shiba! To the next sector — after him!' },
     ]},
     { title:'ACT II · MARS COLONY', world:'MARS COLONY', dialogue:[
       { who:'boss', text:'feels bad man... for YOU.' },

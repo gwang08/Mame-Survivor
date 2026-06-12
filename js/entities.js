@@ -7,7 +7,7 @@ loadImg('boss','assets/enemy-boss-doge.png');
 loadImg('gun','assets/gun.png');
 // stage boss roster (cycled across the 50-stage campaign)
 const BOSS_ROSTER = [
-  {img:'boss-doge',      name:'DOGE MONARCH',   ring:'#e8c04b'},
+  {img:'boss-doge',      name:'ASTEROID SHIBA', ring:'#e8c04b'},
   {img:'boss-pepe',      name:'PEPE LORD',      ring:'#3bd45e'},
   {img:'boss-wojak',     name:'WOJAK',          ring:'#cdd6ff'},
   {img:'boss-astronaut', name:'ASTEROID',       ring:'#4dd2ff'},
