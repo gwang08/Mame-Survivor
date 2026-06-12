@@ -171,18 +171,24 @@
   .trans-title{ position:absolute; top:16px; left:0; right:0; text-align:center; font-size:clamp(20px,5vw,32px); font-weight:900;
     color:#ffd45e; text-shadow:0 0 18px rgba(255,212,94,.5); letter-spacing:1px; z-index:3; }
   .trans-sky{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
-  .moon2{ position:absolute; top:9%; right:9%; width:min(22vw,150px); height:min(22vw,150px); border-radius:50%;
-    background:radial-gradient(circle at 38% 35%, #ffffff, #d2d8e8 58%, #9aa3c0); box-shadow:0 0 60px #cfd6ffaa, inset -10px -10px 0 #b6bed6; }
-  .flygroup{ position:absolute; left:0; top:0; width:min(42vw,210px); }
-  .fly-ship{ width:100%; display:block; filter:drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
-  .fly-boss{ position:absolute; left:28%; top:-44%; width:58%; filter:drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
-  .fly-mame{ position:absolute; left:0; top:0; width:min(24vw,120px); filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
-  .flygroup.go{ animation:flyAway 3.4s cubic-bezier(.45,0,.7,1) forwards; }
-  .fly-mame.go{ animation:chase 3.4s cubic-bezier(.45,0,.7,1) forwards; }
-  @keyframes flyAway{ 0%{ transform:translate(5vw,50vh) rotate(-14deg) scale(1); } 100%{ transform:translate(64vw,5vh) rotate(-20deg) scale(.4); } }
-  @keyframes chase{ 0%{ transform:translate(-14vw,64vh) rotate(-14deg) scale(.95); } 100%{ transform:translate(48vw,15vh) rotate(-20deg) scale(.4); } }
+  .trans-stars{ position:absolute; inset:0; }
+  .trans-stars i{ position:absolute; background:#fff; border-radius:50%; box-shadow:0 0 6px #fff; }
+  .moon-img{ position:absolute; top:6%; right:5%; width:min(26vw,200px); height:auto;
+    filter:drop-shadow(0 0 50px #cfe0ffcc); }
+  .flygroup{ position:absolute; left:0; top:0; width:min(40vw,200px); }
+  .fly-ship{ width:100%; display:block; transform:scaleX(-1); filter:drop-shadow(0 6px 16px rgba(0,0,0,.5)); }  /* face right (toward moon) */
+  .fly-boss{ position:absolute; left:24%; top:-42%; width:56%; filter:drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
+  .fly-mame{ position:absolute; left:0; top:0; width:min(34vw,230px); filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+  .flygroup.go{ animation:flyAway 3.6s cubic-bezier(.45,0,.7,1) forwards; }
+  .fly-mame.go{ animation:chase 3.6s cubic-bezier(.45,0,.7,1) forwards; }
+  @keyframes flyAway{ 0%{ transform:translate(6vw,52vh) rotate(-14deg) scale(1); } 100%{ transform:translate(58vw,8vh) rotate(-14deg) scale(.45); } }
+  @keyframes chase{ 0%{ transform:translate(-18vw,70vh) rotate(-14deg) scale(1); } 100%{ transform:translate(34vw,24vh) rotate(-14deg) scale(.5); } }
   .trans-box{ position:relative; z-index:2; }
   .trans-box .btn{ margin-top:12px; }
+  .vn-row{ display:flex; gap:14px; align-items:center; text-align:left; }
+  .vn-rowtext{ flex:1; }
+  .vn-portrait{ width:clamp(56px,12vw,84px); height:clamp(56px,12vw,84px); object-fit:contain; flex:0 0 auto;
+    background:rgba(255,255,255,.06); border:2px solid #ffffff22; border-radius:14px; padding:4px; }
   .trans-box .vn-name.boss{ color:#ff6b6b; }
   /* social icons + panel sizing */
   #menu .panel{ max-height:88vh; overflow-y:auto; gap:9px; padding:20px 26px; }
@@ -282,17 +288,23 @@
 <div class="overlay" id="trans" style="display:none">
   <div id="transTitle" class="trans-title">STAGE CLEARED</div>
   <div class="trans-sky">
-    <div class="moon2"></div>
+    <div id="transStars" class="trans-stars"></div>
+    <img id="transMoon" class="moon-img" src="assets/moon.png" alt="">
     <div id="transFly" class="flygroup">
       <img id="transBoss" class="fly-boss" alt="">
       <img id="transShip" class="fly-ship" src="assets/ship.png" alt="">
     </div>
-    <img id="transMame" class="fly-mame" alt="">
+    <img id="transMame" class="fly-mame" src="assets/mame-ship.png" alt="">
   </div>
   <div class="vn-box trans-box">
     <button id="transSkip" class="vn-skip">SKIP ⏭</button>
-    <div id="transName" class="vn-name"></div>
-    <div id="transText" class="vn-text"></div>
+    <div class="vn-row">
+      <img id="transPortrait" class="vn-portrait" alt="">
+      <div class="vn-rowtext">
+        <div id="transName" class="vn-name"></div>
+        <div id="transText" class="vn-text"></div>
+      </div>
+    </div>
     <button class="btn" id="transNext">▶ NEXT STAGE</button>
   </div>
 </div>

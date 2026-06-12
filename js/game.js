@@ -97,9 +97,11 @@ function showTransition(nextStage){
   transNextStage=nextStage;
   const act=actOf(stage), boss=BOSS_ROSTER[act];
   $('transTitle').textContent='STAGE '+stage+' CLEARED';
-  $('transBoss').src=ver('assets/'+boss.img+'.png');
-  $('transMame').src=ver(CHARACTERS[selectedChar].file);
+  $('transBoss').src=ver('assets/'+boss.img+'.png');     // boss rides the chrome ship; MAME rides mame-ship.png (static)
   transLines=STORY.acts[act].outro||[]; transIdx=0;
+  // starfield so the sky isn't empty
+  let st=''; for(let i=0;i<90;i++) st+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*100).toFixed(1)+'%;width:'+(Math.random()*2+1).toFixed(1)+'px;height:'+(Math.random()*2+1).toFixed(1)+'px;opacity:'+(0.2+Math.random()*0.6).toFixed(2)+'"></i>';
+  $('transStars').innerHTML=st;
   hideOverlays(); $('trans').style.display='flex'; gs=ST.TRANS;
   const fg=$('transFly'), mm=$('transMame');      // restart the fly animation
   fg.classList.remove('go'); mm.classList.remove('go'); void fg.offsetWidth; fg.classList.add('go'); mm.classList.add('go');
@@ -109,8 +111,10 @@ function showTransition(nextStage){
 }
 function renderTransLine(){
   const L=transLines[transIdx]; if(!L) return;
-  $('transName').className='vn-name'+(L.who==='boss'?' boss':'');
-  $('transName').textContent = L.who==='boss' ? BOSS_ROSTER[actOf(stage)].name : 'MAME';
+  const isBoss=L.who==='boss';
+  $('transName').className='vn-name'+(isBoss?' boss':'');
+  $('transName').textContent = isBoss ? BOSS_ROSTER[actOf(stage)].name : 'MAME';
+  $('transPortrait').src = isBoss ? ver('assets/'+BOSS_ROSTER[actOf(stage)].img+'.png') : ver(CHARACTERS[selectedChar].file);  // speaker face on the left
   typeInto($('transText'), L.text, blipFor(L.who));
 }
 function transAdvance(){
