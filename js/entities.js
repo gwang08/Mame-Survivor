@@ -84,8 +84,8 @@ function nearestEnemy(){
   return best;
 }
 function fire(){
-  const target = nearestEnemy(); if(!target) return;
-  const base = Math.atan2(target.y-player.y, target.x-player.x), spread=0.17;
+  if(!player.firing) return;              // only when there's a target (set by game loop)
+  const base = player.aim, spread=0.17;
   for(let i=0;i<player.bullets;i++){
     const a = base + (i-(player.bullets-1)/2)*spread;
     bullets.push({ x:player.x, y:player.y, vx:Math.cos(a)*player.bulletSpeed, vy:Math.sin(a)*player.bulletSpeed,
