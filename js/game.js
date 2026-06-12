@@ -49,10 +49,11 @@ function startStage(n){
   else beginPlay();
 }
 function beginPlay(){
+  clearInterval(typeTimer); typing=false;
   showBanner('STAGE '+stage, curMap().name);
-  gs=ST.PLAY; hideOverlays(); startAudio();
+  gs=ST.PLAY; hideOverlays(); startAudio();    // startAudio restores full music volume
 }
-let storyLines=[], storyIdx=0;
+let storyLines=[], storyIdx=0, typeTimer=null, typing=false, fullLine='';
 function showStory(act){
   const a=STORY.acts[act], boss=BOSS_ROSTER[act];
   $('vnTitle').textContent=a.title;
@@ -60,6 +61,7 @@ function showStory(act){
   $('vnBoss').src=ver('assets/'+boss.img+'.png');
   storyLines=a.dialogue; storyIdx=0;
   hideOverlays(); $('story').style.display='flex'; gs=ST.STORY; startAudio();
+  if(bgm && !muted) bgm.volume = musicVol*0.4;   // duck music during dialogue
   renderStoryLine();
 }
 function renderStoryLine(){
@@ -67,12 +69,23 @@ function renderStoryLine(){
   const who=L.who, mame=$('vnMame'), bss=$('vnBoss');
   $('vnName').className='vn-name'+(who==='boss'?' boss':who==='narrator'?' narrator':'');
   $('vnName').textContent = who==='boss' ? BOSS_ROSTER[actOf(stage)].name : who==='narrator' ? '— STORY —' : 'MAME';
-  $('vnText').textContent=L.text;
   mame.classList.toggle('act', who==='mame'); mame.classList.toggle('dim', who!=='mame');
   bss.classList.toggle('act', who==='boss');  bss.classList.toggle('dim', who!=='boss');
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
+  // typewriter reveal + per-speaker typing blips
+  fullLine=L.text; const blip = who==='boss'?170 : who==='mame'?500 : 320;
+  clearInterval(typeTimer); typing=true; let i=0; $('vnText').textContent='';
+  typeTimer=setInterval(()=>{
+    i++; $('vnText').textContent=fullLine.slice(0,i);
+    if(i%2===0 && fullLine[i-1]!==' ') beep(blip,0.03,'square',0.035);
+    if(i>=fullLine.length){ clearInterval(typeTimer); typing=false; }
+  }, 18);
 }
-function storyAdvance(){ if(gs!==ST.STORY) return; storyIdx++; if(storyIdx>=storyLines.length) beginPlay(); else renderStoryLine(); }
+function storyAdvance(){
+  if(gs!==ST.STORY) return;
+  if(typing){ clearInterval(typeTimer); typing=false; $('vnText').textContent=fullLine; return; }  // 1st tap: reveal full line
+  storyIdx++; if(storyIdx>=storyLines.length) beginPlay(); else renderStoryLine();
+}
 function stageClear(){
   if(stage>=TOTAL_STAGES){ win(); return; }
   maxUnlocked=Math.max(maxUnlocked, stage+1); localStorage.setItem('mame_unlocked',maxUnlocked);
