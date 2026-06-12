@@ -5,13 +5,11 @@ loadImg('player','assets/doge-sprite.png');
 loadImg('mame','assets/doge-mame.png');
 loadImg('boss','assets/enemy-boss-doge.png');
 loadImg('gun','assets/gun.png');
-// stage boss roster (cycled across the 50-stage campaign)
+// stage boss roster — 3-stage campaign: Pump.fun's enforcers, then the boss himself
 const BOSS_ROSTER = [
-  {img:'boss-asteroid',  name:'ASTEROID SHIBA', ring:'#ff8a3c'},
-  {img:'boss-pepe',      name:'PEPE LORD',      ring:'#3bd45e'},
-  {img:'boss-wojak',     name:'WOJAK',          ring:'#cdd6ff'},
-  {img:'boss-astronaut', name:'ASTEROID',       ring:'#4dd2ff'},
-  {img:'boss-bnb',       name:'BNB CHAIN KING', ring:'#f5b50a'},
+  {img:'boss-chillguy', name:'CHILLGUY',       ring:'#c9a06a'},
+  {img:'boss-penguin',  name:'PENGUIN',        ring:'#6fd0e6'},
+  {img:'boss-asteroid', name:'ASTEROID SHIBA', ring:'#ff8a3c'},
 ];
 BOSS_ROSTER.forEach(b=>loadImg(b.img,'assets/'+b.img+'.png'));
 ['wif','bonk','peanut','popcat','sahur'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));

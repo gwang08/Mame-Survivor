@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Mame Survivor 🐕🔥 — Survive the Meme Coins</title>
 <meta name="description" content="Mame Survivor — survive endless waves of meme coins (Pepe, Shib, Floki, Bonk). Level up, pick power-ups, HODL to the moon!" />
-<link rel="icon" type="image/png" href="assets/favicon.png?v=29" />
-<link rel="apple-touch-icon" href="assets/favicon.png?v=29" />
+<link rel="icon" type="image/png" href="assets/favicon.png?v=30" />
+<link rel="apple-touch-icon" href="assets/favicon.png?v=30" />
 <style>
   :root{ --gold:#ffd45e; --cyan:#36d6ff; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
@@ -135,6 +135,13 @@
   .snode.s4{ background:radial-gradient(circle at 34% 30%,#e0a8ff,#7a2fd6); box-shadow:0 0 26px #b06bffcc, inset -6px -6px 12px #0006; }
   .snode.locked{ background:radial-gradient(circle at 34% 30%,#8a90a8,#3a3f52); border-color:#aab; cursor:default; box-shadow:0 0 14px #0008, inset -6px -6px 12px #0006; }
   .snode.cur{ box-shadow:0 0 0 4px #ffd45e, 0 0 30px #ffd45e; animation:bob 1.1s ease-in-out infinite; }
+  .snode.soon{ background:radial-gradient(circle at 34% 30%,#6a6f86,#2c3042); border-color:#9aa; cursor:pointer; box-shadow:0 0 14px #0008, inset -6px -6px 12px #0006; opacity:.85; }
+  .snode.soon .lk{ opacity:.7; } .snode.soon .soonlbl{ font-size:10px; font-weight:900; letter-spacing:1px; color:#cfd6ff; margin-top:1px; }
+  .snode.soon:hover{ transform:translate(-50%,-50%) scale(1.08); opacity:1; }
+  #soonToast{ position:fixed; left:50%; bottom:14%; transform:translateX(-50%) translateY(14px); z-index:30;
+    background:#1a1a1a; color:#ffd45e; font-weight:900; letter-spacing:1px; padding:12px 24px; border-radius:14px;
+    border:2px solid #ffd45e; box-shadow:0 10px 30px #0009; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
+  #soonToast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   @keyframes bob{ 0%,100%{ margin-top:0 } 50%{ margin-top:-7px } }
   .banner-ribbon{ position:absolute; transform:translate(-50%,-50%); color:#9fb0ff; font-weight:900; font-size:13px; letter-spacing:3px;
     white-space:nowrap; z-index:3; text-shadow:0 0 10px #36d6ff88; }
@@ -156,10 +163,10 @@
   /* per-speaker dialogue backgrounds */
   .vn-box.bg-mame{ border-color:#7fb6ff; background:
     linear-gradient(180deg,rgba(8,10,28,.78),rgba(8,10,28,.9)),
-    url('assets/dogplanet.png?v=29') center/cover no-repeat; }
+    url('assets/dogplanet.png?v=30') center/cover no-repeat; }
   .vn-box.bg-pump{ border-color:#39d98a; background:
     linear-gradient(90deg,rgba(8,22,17,.93) 42%,rgba(8,22,17,.5)),
-    url('assets/pump-pill.png?v=29') right 14px center/auto 128% no-repeat,
+    url('assets/pump-pill.png?v=30') right 14px center/auto 128% no-repeat,
     linear-gradient(180deg,#11271d,#0a160f); }
   .vn-name{ font-size:clamp(16px,4vw,22px); font-weight:900; color:#ffd45e; margin-bottom:6px; letter-spacing:1px; }
   .vn-name.boss{ color:#ff6b6b; } .vn-name.narrator{ color:#9fb0ff; }
@@ -191,12 +198,6 @@
   .fly-mame.go{ animation:chase 3.6s cubic-bezier(.45,0,.7,1) forwards; }
   @keyframes flyAway{ 0%{ transform:translate(6vw,52vh) rotate(-14deg) scale(1); } 100%{ transform:translate(58vw,8vh) rotate(-14deg) scale(.45); } }
   @keyframes chase{ 0%{ transform:translate(-18vw,70vh) rotate(-14deg) scale(1); } 100%{ transform:translate(34vw,24vh) rotate(-14deg) scale(.5); } }
-  /* Moo Deng flies in to block MAME (stage 1 only) */
-  .fly-moodeng{ position:absolute; left:0; top:0; width:min(26vw,168px); opacity:0;
-    filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)); transform:scaleX(-1); }   /* face left, toward MAME */
-  .fly-moodeng.go{ animation:moodengIn 1s ease-out .8s forwards; }
-  @keyframes moodengIn{ 0%{ transform:translate(72vw,30vh) scaleX(-1) scale(.3); opacity:0; }
-    100%{ transform:translate(40vw,40vh) scaleX(-1) scale(1); opacity:1; } }
   .trans-box{ position:relative; z-index:2; }
   .trans-box .btn{ margin-top:12px; }
   .vn-row{ display:flex; gap:14px; align-items:center; text-align:left; }
@@ -237,8 +238,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=29" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
-      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=29" alt="Arena">ARENA<small>battle · grow · rank</small></button>
+      <button class="mode sel" data-mode="campaign"><img src="assets/mode-campaign.png?v=30" alt="Campaign">CAMPAIGN<small>stages &amp; bosses</small></button>
+      <button class="mode" data-mode="arena"><img src="assets/mode-arena.png?v=30" alt="Arena">ARENA<small>battle · grow · rank</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -264,6 +265,7 @@
     <div><div class="map-title">GALAXY MAP</div><div class="map-subt">beat a stage to unlock the next</div></div>
   </div>
   <div id="stageMap" class="stage-map"></div>
+  <div id="soonToast">🔒 UPDATE SOON</div>
 </div>
 
 <!-- STAGE CLEAR (campaign) -->
@@ -310,7 +312,6 @@
       <img id="transShip" class="fly-ship" src="assets/ship-pump.png" alt="">
     </div>
     <img id="transMame" class="fly-mame" src="assets/mame-ship.png" alt="">
-    <img id="transMoodeng" class="fly-moodeng" src="assets/moodeng.png" alt="" style="display:none">
   </div>
   <div class="vn-box trans-box" id="transBox">
     <button id="transSkip" class="vn-skip">SKIP ⏭</button>
@@ -335,7 +336,7 @@
   <button class="btn" id="overHome">← HOME</button>
 </div>
 
-<audio id="bgm" src="assets/nhacnen.mp3?v=29" loop preload="auto"></audio>
+<audio id="bgm" src="assets/nhacnen.mp3?v=30" loop preload="auto"></audio>
 
 <button id="homeBtn" title="Home" style="display:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
 <button id="settingsBtn" title="Settings">⚙️</button>

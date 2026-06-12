@@ -18,7 +18,9 @@ const MAPS = [
   { name:'VOID NEBULA', bg:'#160a1f', grid:'#b06bff26' },
 ];
 const ARENA_THEME = { name:'ARENA', bg:'#0a0f1e', grid:'#4dd2ff18' };
-const TOTAL_STAGES = 50;
+const TOTAL_STAGES = 3;            // playable story stages (rest are "UPDATE SOON")
+const SOON_NODES   = 5;            // locked teaser nodes shown after stage 3
+const TOTAL_NODES  = TOTAL_STAGES + SOON_NODES;
 let stage=1, stageKills=0, bossPhase=0, warnTimer=0, curBoss=null;
 let lastStage=1;
 let banner={text:'',sub:'',life:0};
@@ -41,12 +43,22 @@ function resetPlayerCommon(){
 function startStage(n){
   resetPlayerCommon(); bots.length=0;
   Object.assign(player,{ speed:3.5,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
-    fireRate:32,damage:10,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
+    fireRate:32,damage:400,bullets:1,bulletSpeed:7,pierce:0,bulletSize:7,range:540,pickup:95,regen:0 });
   player.name='YOU'; const ch=CHARACTERS[selectedChar]; player.skin=ch.key; ch.apply(player);
   gameMode='campaign'; stage=n; lastStage=n; stageKills=0; bossPhase=0; warnTimer=0; curBoss=null;
   location.hash='campaign-'+n;
-  if((n-1)%10===0) showStory(actOf(n));   // act intro cutscene at the start of each world
-  else beginPlay();
+  showStory(actOf(n));                      // every stage has its own intro dialogue
+}
+// dialogue character -> portrait + name + style (shared by story intro & transition outro)
+function storyChar(who){
+  switch(who){
+    case 'mame':     return { name:'MAME',           src:CHARACTERS[selectedChar].file, side:'left',  cls:'' };
+    case 'moodeng':  return { name:'MOO DENG',        src:'assets/moodeng.png',          side:'left',  cls:'moodeng' };
+    case 'asteroid': return { name:'ASTEROID SHIBA',  src:'assets/boss-asteroid.png',    side:'right', cls:'boss' };
+    case 'chillguy': return { name:'CHILLGUY',        src:'assets/boss-chillguy.png',    side:'right', cls:'boss' };
+    case 'penguin':  return { name:'PENGUIN',         src:'assets/boss-penguin.png',     side:'right', cls:'boss' };
+    default:         return { name:'— STORY —',       src:CHARACTERS[selectedChar].file, side:'left',  cls:'narrator' };
+  }
 }
 function beginPlay(){
   clearInterval(typeTimer); typing=false;
@@ -54,7 +66,7 @@ function beginPlay(){
   gs=ST.PLAY; hideOverlays(); startAudio();    // startAudio restores full music volume
 }
 let storyLines=[], storyIdx=0, typeTimer=null, typing=false, fullLine='', typeEl=null;
-let transLines=[], transIdx=0, transNextStage=2;
+let transLines=[], transIdx=0, transNextStage=2, transFinal=false;
 // shared typewriter
 function typeInto(el, text, blip){
   typeEl=el; fullLine=text; clearInterval(typeTimer); typing=true; let i=0; el.textContent='';
@@ -66,26 +78,30 @@ function completeType(){ clearInterval(typeTimer); typing=false; if(typeEl) type
 const blipFor = who => who==='boss'?170 : who==='mame'?500 : 320;
 
 // ---- pre-fight dialogue ----
-function showStory(act){
-  const a=STORY.acts[act], boss=BOSS_ROSTER[act];
-  $('vnTitle').textContent=a.title;
-  $('vnMame').src=ver(CHARACTERS[selectedChar].file);
-  $('vnBoss').src=ver('assets/'+boss.img+'.png');
-  storyLines=a.dialogue; storyIdx=0;
+function showStory(si){
+  const s=STORY.stages[si];
+  $('vnTitle').textContent=s.title;
+  // preset both slots so neither portrait is blank (left = good, right = villain)
+  const fl=s.intro.find(l=>storyChar(l.who).side==='left');
+  const fr=s.intro.find(l=>storyChar(l.who).side==='right');
+  $('vnMame').src=ver(storyChar(fl?fl.who:'mame').src);
+  $('vnBoss').src=ver(storyChar(fr?fr.who:'asteroid').src);
+  storyLines=s.intro; storyIdx=0;
   hideOverlays(); $('story').style.display='flex'; gs=ST.STORY; startAudio();
   if(bgm && !muted) bgm.volume = musicVol*0.4;   // duck music during dialogue
   renderStoryLine();
 }
 function renderStoryLine(){
   const L=storyLines[storyIdx]; if(!L){ beginPlay(); return; }
-  const who=L.who, mame=$('vnMame'), bss=$('vnBoss');
-  $('vnName').className='vn-name'+(who==='boss'?' boss':who==='narrator'?' narrator':'');
-  $('vnName').textContent = who==='boss' ? BOSS_ROSTER[actOf(stage)].name : who==='narrator' ? '— STORY —' : 'MAME';
-  const box=$('vnBox'); box.classList.toggle('bg-mame', who==='mame'); box.classList.toggle('bg-pump', who==='boss');
-  mame.classList.toggle('act', who==='mame'); mame.classList.toggle('dim', who!=='mame');
-  bss.classList.toggle('act', who==='boss');  bss.classList.toggle('dim', who!=='boss');
+  const c=storyChar(L.who), left=c.side==='left', mame=$('vnMame'), bss=$('vnBoss');
+  (left?mame:bss).src=ver(c.src);                 // speaker takes its side's slot
+  $('vnName').className='vn-name '+c.cls;
+  $('vnName').textContent=c.name;
+  const box=$('vnBox'); box.classList.toggle('bg-mame', L.who==='mame'); box.classList.toggle('bg-pump', c.cls==='boss'||L.who==='moodeng');
+  mame.classList.toggle('act', left);  mame.classList.toggle('dim', !left);
+  bss.classList.toggle('act', !left);  bss.classList.toggle('dim', left);
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
-  typeInto($('vnText'), L.text, blipFor(who));
+  typeInto($('vnText'), L.text, blipFor(L.who));
 }
 function storyAdvance(){
   if(gs!==ST.STORY) return;
@@ -97,16 +113,11 @@ function storyAdvance(){
 function showTransition(nextStage){
   transNextStage=nextStage;
   const act=actOf(stage), boss=BOSS_ROSTER[act];
-  $('transTitle').textContent='STAGE '+stage+' CLEARED';
-  $('transBoss').src=ver('assets/'+boss.img+'.png');     // boss rides the Pump.fun ship; MAME rides mame-ship.png
-  const md=$('transMoodeng');
-  if(stage===1){                                         // one-time: Moo Deng flies in to block MAME
-    transLines=STORY.stage1Trans;
-    md.style.display='block'; md.classList.remove('go'); void md.offsetWidth; md.classList.add('go');
-  } else {
-    transLines=STORY.acts[act].outro||[]; md.style.display='none';
-  }
-  transIdx=0;
+  transFinal = stage>=TOTAL_STAGES;
+  $('transTitle').textContent = transFinal ? 'PUMP CORE CLEARED' : 'STAGE '+stage+' CLEARED';
+  $('transBoss').src=ver('assets/'+boss.img+'.png');     // defeated boss flees on the Pump.fun ship
+  $('transNext').textContent = transFinal ? 'TO BE CONTINUED ▶' : '▶ NEXT STAGE';
+  transLines=STORY.stages[act].outro||[]; transIdx=0;
   // starfield so the sky isn't empty
   let st=''; for(let i=0;i<90;i++) st+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*100).toFixed(1)+'%;width:'+(Math.random()*2+1).toFixed(1)+'px;height:'+(Math.random()*2+1).toFixed(1)+'px;opacity:'+(0.2+Math.random()*0.6).toFixed(2)+'"></i>';
   $('transStars').innerHTML=st;
@@ -119,26 +130,23 @@ function showTransition(nextStage){
 }
 function renderTransLine(){
   const L=transLines[transIdx]; if(!L) return;
-  const who=L.who;
-  $('transName').className='vn-name'+(who==='boss'?' boss':who==='moodeng'?' moodeng':'');
-  $('transName').textContent = who==='boss' ? BOSS_ROSTER[actOf(stage)].name : who==='moodeng' ? 'MOO DENG' : 'MAME';
-  $('transPortrait').src = who==='boss'    ? ver('assets/'+BOSS_ROSTER[actOf(stage)].img+'.png')
-                         : who==='moodeng' ? ver('assets/moodeng.png')
-                         : ver(CHARACTERS[selectedChar].file);   // speaker face on the left
-  const tbox=$('transBox'); tbox.classList.toggle('bg-mame', who==='mame'); tbox.classList.toggle('bg-pump', who==='boss'||who==='moodeng');
-  typeInto($('transText'), L.text, blipFor(who));
+  const c=storyChar(L.who);
+  $('transName').className='vn-name '+c.cls;
+  $('transName').textContent=c.name;
+  $('transPortrait').src=ver(c.src);
+  const tbox=$('transBox'); tbox.classList.toggle('bg-mame', L.who==='mame'); tbox.classList.toggle('bg-pump', c.cls==='boss'||L.who==='moodeng');
+  typeInto($('transText'), L.text, blipFor(L.who));
 }
 function transAdvance(){
   if(gs!==ST.TRANS) return;
   if(typing){ completeType(); return; }
   transIdx++; if(transIdx<transLines.length) renderTransLine();   // else wait for NEXT button
 }
-function proceedNext(){ clearInterval(typeTimer); typing=false; startStage(transNextStage); }
+function proceedNext(){ clearInterval(typeTimer); typing=false; if(transFinal){ win(); } else { startStage(transNextStage); } }
 
 function stageClear(){
-  maxUnlocked=Math.max(maxUnlocked, stage+1); localStorage.setItem('mame_unlocked',maxUnlocked);
-  if(stage>=TOTAL_STAGES){ win(); return; }
-  showTransition(stage+1);
+  maxUnlocked=Math.min(TOTAL_STAGES, Math.max(maxUnlocked, stage+1)); localStorage.setItem('mame_unlocked',maxUnlocked);
+  showTransition(stage+1);   // plays outro; on the final stage the NEXT button -> ending
 }
 function stageClearOLD(){
   gs=ST.CLEAR; $('clearStage').textContent='STAGE '+stage+' CLEAR!';
@@ -470,13 +478,14 @@ function renderCharSelect(){
     box.appendChild(el);
   });
 }
-const MAP_DECOR=['assets/boss-bnb.png','assets/boss-pepe.png','assets/boss-doge.png','assets/boss-wojak.png','assets/boss-astronaut.png',
-  'assets/doge-sprite.png','assets/doge-mame.png'];
+const MAP_DECOR=['assets/boss-chillguy.png','assets/boss-penguin.png','assets/boss-asteroid.png',
+  'assets/moodeng.png','assets/coins/wif.png','assets/coins/popcat.png'];
 const LOCK_SVG='<svg viewBox="0 0 24 24" width="28" height="28" fill="#eef"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#eef" stroke-width="2"/></svg>';
+function showSoonToast(){ const t=$('soonToast'); if(!t) return; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1500); }
 function buildStageSelect(){
   const map=$('stageMap');
   const W=Math.min(VW*0.96, 600), gapY=140, padTop=132, padBot=120;   // padTop clears the sticky header
-  const H=padTop+(TOTAL_STAGES-1)*gapY+padBot;
+  const H=padTop+(TOTAL_NODES-1)*gapY+padBot;
   map.style.width=W+'px'; map.style.height=H+'px';
   const cx=W/2, amp=W*0.28;
   const pos=n=>({x:cx+Math.sin(n*0.62)*amp, y:padTop+(n-1)*gapY});
@@ -492,23 +501,29 @@ function buildStageSelect(){
   for(let i=0;i<9;i++){ const c=PAL[i%PAL.length], r=rand(16,44), p=pos(i*5+3);
     const sideX = (i%2? rand(W*0.62,W-30) : rand(30,W*0.34));   // keep off the central trail
     pl+=planet(sideX, clamp(p.y+rand(-40,40),50,H-50), r, c[0], c[1], c[2]); }
-  let pts=''; for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
+  let pts=''; for(let n=1;n<=TOTAL_NODES;n++){ const p=pos(n); pts+=p.x.toFixed(0)+','+p.y.toFixed(0)+' '; }
   let h='<svg width="'+W+'" height="'+H+'" style="position:absolute;left:0;top:0;pointer-events:none;z-index:0">'+st+pl
     +'<polyline points="'+pts+'" fill="none" stroke="#ffffff55" stroke-width="3" stroke-dasharray="2 13" stroke-linecap="round"/></svg>';
   // boss mascots drifting in space — big & clearly visible, cycling all of them
   let di=0;
-  for(let n=4;n<=TOTAL_STAGES;n+=3){ const p=pos(n), side=(Math.sin(n*0.62)>0)?-1:1, img=MAP_DECOR[di++ % MAP_DECOR.length];
-    const sz=84+(di%3)*16;   // 84-116px
-    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.45,sz/2+8,W-sz/2-8).toFixed(0)+'px;top:'+p.y.toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+ver(img)+'"></div>'; }
-  // sector labels every 10 stages
-  for(let r=0;r<TOTAL_STAGES;r+=10){ const p=pos(r+1);
-    h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-50).toFixed(0)+'px">★ SECTOR '+(Math.floor(r/10)+1)+' · '+MAPS[Math.floor(r/10)%MAPS.length].name+' ★</div>'; }
-  for(let n=1;n<=TOTAL_STAGES;n++){ const p=pos(n), locked=n>maxUnlocked, cur=n===maxUnlocked, region=actOf(n), stars=n<maxUnlocked?'★★★':'';
-    h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
-      +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';
+  for(let n=1;n<=TOTAL_NODES;n+=2){ const p=pos(n), side=(Math.sin(n*0.62)>0)?-1:1, img=MAP_DECOR[di++ % MAP_DECOR.length];
+    const sz=72+(di%3)*14;
+    h+='<div class="decor" style="left:'+clamp(cx+side*amp*1.5,sz/2+8,W-sz/2-8).toFixed(0)+'px;top:'+(p.y+60).toFixed(0)+'px;width:'+sz+'px;height:'+sz+'px"><img src="'+ver(img)+'"></div>'; }
+  // sector label
+  { const p=pos(1); h+='<div class="banner-ribbon" style="left:'+cx+'px;top:'+(p.y-50).toFixed(0)+'px">★ THE PUMP.FUN WAR ★</div>'; }
+  for(let n=1;n<=TOTAL_NODES;n++){ const p=pos(n);
+    if(n<=TOTAL_STAGES){
+      const locked=n>maxUnlocked, cur=n===maxUnlocked, region=actOf(n), stars=n<maxUnlocked?'★★★':'';
+      h+='<button class="snode s'+region+(locked?' locked':'')+(cur?' cur':'')+'" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" '+(locked?'disabled':'data-n="'+n+'"')+'>'
+        +(locked?'<span class="lk">'+LOCK_SVG+'</span>':'<span class="num">'+n+'</span>'+(stars?'<span class="stars">'+stars+'</span>':''))+'</button>';
+    } else {
+      h+='<button class="snode soon" style="left:'+p.x.toFixed(0)+'px;top:'+p.y.toFixed(0)+'px" data-soon="1">'
+        +'<span class="lk">'+LOCK_SVG+'</span><span class="soonlbl">SOON</span></button>';
+    }
   }
   map.innerHTML=h;
   map.querySelectorAll('.snode[data-n]').forEach(b=> b.onclick=()=>{ beep(1000,0.05,'square',0.04); startStage(+b.dataset.n); });
+  map.querySelectorAll('.snode[data-soon]').forEach(b=> b.onclick=()=>{ beep(300,0.14,'square',0.05); showSoonToast(); });
   const cp=pos(Math.max(1,maxUnlocked)); $('stageSelect').scrollTop=Math.max(0, cp.y - VH*0.4);
 }
 function enterCampaign(){ gameMode='campaign'; buildStageSelect(); hideOverlays(); $('stageSelect').style.display='block';
