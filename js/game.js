@@ -106,6 +106,7 @@ function renderStoryLine(){
   if(rw){ $('vnBoss').src=ver(storyChar(rw).src); $('vnBoss').style.display='block'; } else $('vnBoss').style.display='none';
   $('vnMame').classList.toggle('act', left);  $('vnMame').classList.toggle('dim', !left);
   $('vnBoss').classList.toggle('act', !left); $('vnBoss').classList.toggle('dim', left);
+  const story=$('story'); story.classList.toggle('spk-left', left); story.classList.toggle('spk-right', !left);
   $('vnName').className='vn-name '+c.cls;
   $('vnName').textContent=c.name;
   $('vnHint').textContent = (storyIdx>=storyLines.length-1) ? '▶ TAP TO START' : '▶ tap to continue';
