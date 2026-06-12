@@ -76,6 +76,7 @@
   .mode{ cursor:pointer; padding:9px 18px; border-radius:12px; font-weight:900; font-size:14px; color:#1a1a1a;
     background:#fff8d6; border:3px solid #1a1a1a; box-shadow:3px 4px 0 #1a1a1a; display:flex; flex-direction:column; align-items:center; line-height:1.15; }
   .mode small{ font-weight:normal; font-size:10px; color:#666; margin-top:2px; }
+  .mode .mi{ font-size:30px; line-height:1; margin-bottom:2px; }
   .mode.sel{ background:#ffd400; box-shadow:5px 6px 0 #1a1a1a; transform:translateY(-2px); }
   /* settings */
   #settingsBtn{ position:fixed; top:46px; right:62px; z-index:8; width:42px; height:42px; font-size:20px; cursor:pointer;
@@ -107,8 +108,8 @@
     <div id="charSelect" class="chars"></div>
     <div class="pick">MODE</div>
     <div id="modeSelect" class="modes">
-      <button class="mode sel" data-mode="coop">🤝 CO-OP<small>race for kills</small></button>
-      <button class="mode" data-mode="pvp">⚔️ PvP<small>fight everyone</small></button>
+      <button class="mode sel" data-mode="coop"><span class="mi">🤝🤖</span>CO-OP<small>team up with bots</small></button>
+      <button class="mode" data-mode="pvp"><span class="mi">⚔️😈</span>PvP<small>fight everyone</small></button>
     </div>
     <button class="btn" id="startBtn">▶ PLAY</button>
     <div class="best" id="menuBest">Best: 0:00</div>
@@ -120,6 +121,15 @@
 <div class="overlay" id="levelup" style="display:none">
   <h2>⬆ LEVEL UP — choose a power-up</h2>
   <div id="cards"></div>
+</div>
+
+<!-- WIN -->
+<div class="overlay" id="win" style="display:none">
+  <h1 style="color:#4dd2ff;text-shadow:0 0 24px rgba(77,210,255,.6)">🏆 CHAMPION!</h1>
+  <div class="stat">⏱ <span id="winTime">0:00</span></div>
+  <div id="winKills" class="tag"></div>
+  <div class="tag">You cleared all <b>50 stages</b> &amp; every meme-coin boss! 🚀</div>
+  <button class="btn" id="winRetry">↻ PLAY AGAIN</button>
 </div>
 
 <!-- GAME OVER -->

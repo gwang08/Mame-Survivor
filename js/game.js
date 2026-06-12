@@ -1,14 +1,31 @@
 // Mame Survivor — main loop, collisions, state machine, HUD, UI glue
-const ST = { MENU:0, PLAY:1, LEVELUP:2, OVER:3 };
+const ST = { MENU:0, PLAY:1, LEVELUP:2, OVER:3, WIN:4 };
 let gs = ST.MENU, time=0, frame=0, spawnTimer=0, bossTimer=0;
 let best = +(localStorage.getItem('mamesurvivor_best')||0);
 let selectedChar = 0;
 let paused = false;
 const BOT_COUNT = 7;
 
+// ---- stage / map progression (50-stage campaign) ----
+const MAPS = [
+  { name:'DEEP SPACE',  bg:'#0c0c18', grid:'#ffffff12' },
+  { name:'MARS COLONY', bg:'#1a0d0a', grid:'#ff7a3c26' },
+  { name:'TOXIC SWAMP', bg:'#0a1a10', grid:'#5ed36b26' },
+  { name:'NEO-TOKYO',   bg:'#0a0e22', grid:'#4dd2ff26' },
+  { name:'VOID NEBULA', bg:'#160a1f', grid:'#b06bff26' },
+];
+const TOTAL_STAGES = 50;
+let stage=1, stageKills=0;
+let bossPhase=0;        // 0 clearing · 1 warning · 2 boss fight
+let warnTimer=0, curBoss=null;
+let banner={text:'',sub:'',life:0};
+function showBanner(text,sub){ banner={text,sub:sub||'',life:140}; }
+function curMap(){ return MAPS[(stage-1)%MAPS.length]; }
+function stageQuota(s){ return 12 + Math.floor(s*1.5); }   // minions to clear before boss
+
 const $ = id => document.getElementById(id);
 const fmt = s => { const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); };
-function hideOverlays(){ ['menu','over','levelup'].forEach(k=>$(k).style.display='none'); }
+function hideOverlays(){ ['menu','over','levelup','win'].forEach(k=>$(k).style.display='none'); }
 
 function startGame(){
   Object.assign(player,{ x:0,y:0,speed:3,size:56,hp:100,maxHp:100,xp:0,level:1,xpNext:5,
@@ -19,9 +36,19 @@ function startGame(){
   enemies.length=bullets.length=gems.length=particles.length=floaters.length=0;
   makeBots(BOT_COUNT);                                   // AI "players" join the arena
   cam.x=cam.y=cam.shake=0; time=0; frame=0; spawnTimer=0; bossTimer=0; paused=false;
+  stage=1; stageKills=0; bossPhase=0; warnTimer=0; curBoss=null;
+  showBanner('STAGE 1', curMap().name);
   gs=ST.PLAY; hideOverlays();
   if(ensureAC() && AC.state==='suspended') AC.resume();
   playMusic();
+}
+
+function win(){
+  gs=ST.WIN; addShake(22); const survived=Math.floor(time);
+  if(survived>best){ best=survived; localStorage.setItem('mamesurvivor_best',best); }
+  $('winTime').textContent=fmt(survived);
+  $('winKills').textContent='💀 '+player.kills+' kills  •  Lv '+player.level;
+  $('win').style.display='flex';
 }
 
 function levelUp(){
@@ -65,10 +92,30 @@ function update(){
 
   updateBots();   // AI players move, fire, score
 
-  // spawning
-  if(--spawnTimer<=0){ const n=1+Math.floor(time/35); for(let i=0;i<n;i++) spawnWave(time);
-    spawnTimer=Math.max(8, 40 - time*0.35); }
-  if(++bossTimer > 60*45){ spawnBoss(); bossTimer=0; floatText(player.x,player.y-80,'⚠ BOSS!','#ff5050'); }
+  if(banner.life>0) banner.life--;
+
+  // minion spawning — during clear phase & boss fight (paused during warning)
+  if(bossPhase===0 || bossPhase===2){
+    if(--spawnTimer<=0){
+      const n = bossPhase===2 ? 1 : 1+Math.floor(stage/6);
+      for(let i=0;i<n;i++) spawnWave(time + stage*8);          // stage ramps difficulty
+      spawnTimer = bossPhase===2 ? 80 : Math.max(9, 36 - stage);
+    }
+  }
+  // cleared quota -> WARNING -> spawn this stage's boss
+  if(bossPhase===0 && stageKills>=stageQuota(stage)){
+    bossPhase=1; warnTimer=150;
+    showBanner('⚠ WARNING', BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length].name+' INCOMING'); beep(160,0.5,'sawtooth',0.07);
+  }
+  if(bossPhase===1 && --warnTimer<=0){
+    bossPhase=2; curBoss=spawnStageBoss(stage); addShake(22);
+    showBanner('BOSS', curBoss.name+'!'); beep(120,0.6,'sawtooth',0.08);
+  }
+  // boss summons minions
+  if(bossPhase===2 && curBoss && frame%240===0){
+    for(let i=0;i<3;i++){ const a=Math.random()*7;
+      spawnEnemy(COIN_TYPES[Math.floor(Math.random()*3)], curBoss.x+Math.cos(a)*110, curBoss.y+Math.sin(a)*110); }
+  }
 
   // bullets
   for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.x+=b.vx; b.y+=b.vy; if(--b.life<=0) bullets.splice(i,1); }
@@ -97,10 +144,18 @@ function update(){
       }
     }
     if(e.hp<=0){
-      burst(e.x,e.y,e.ring,e.boss?44:12,e.boss?7:5,e.boss?7:5,30); addShake(e.boss?14:1.4);
+      burst(e.x,e.y,e.ring,e.stageBoss?90:(e.boss?44:12),e.boss?7:5,e.boss?7:5,e.stageBoss?60:30);
+      addShake(e.stageBoss?26:(e.boss?14:1.4));
       const n=e.boss?22:1; for(let k=0;k<n;k++) gems.push({x:e.x+rand(-22,22),y:e.y+rand(-22,22),v:e.xp/n,big:e.xp>=4});
       const killer=e.lastHitBy||player; if(killer && killer.kills!=null) killer.kills++;   // credit the shooter
-      enemies.splice(ei,1); continue;
+      enemies.splice(ei,1);
+      if(e.stageBoss){
+        curBoss=null;
+        if(stage>=TOTAL_STAGES){ win(); return; }       // beat all 50 stages
+        stage++; stageKills=0; bossPhase=0;
+        showBanner('STAGE '+stage, curMap().name); beep(1320,0.2,'sine',0.06);
+      } else if(bossPhase===0){ stageKills++; }
+      continue;
     }
     // contact damage to any nearby dog
     for(const d of dogs){
@@ -152,7 +207,7 @@ function update(){
 
 // ---- rendering ----
 function drawGrid(){
-  const gap=64; ctx.strokeStyle='#ffffff09'; ctx.lineWidth=1;
+  const gap=64; ctx.strokeStyle=curMap().grid; ctx.lineWidth=1;
   const ox=((VW/2-cam.x)%gap+gap)%gap, oy=((VH/2-cam.y)%gap+gap)%gap;
   ctx.beginPath();
   for(let x=ox;x<VW;x+=gap){ ctx.moveTo(x,0); ctx.lineTo(x,VH); }
@@ -162,7 +217,7 @@ function drawGrid(){
 function draw(){
   const o=camOffset();
   ctx.setTransform(1,0,0,1,o.x,o.y);
-  ctx.fillStyle='#0c0c18'; ctx.fillRect(-o.x-2,-o.y-2,VW+4,VH+4);
+  ctx.fillStyle=curMap().bg; ctx.fillRect(-o.x-2,-o.y-2,VW+4,VH+4);
   drawGrid();
   for(const g of gems) drawGem(g);
   for(const e of enemies) drawEnemy(e);
@@ -171,8 +226,40 @@ function draw(){
   drawPlayer();
   drawParticles(); drawFloaters();
   ctx.setTransform(1,0,0,1,0,0);
-  if(gs===ST.PLAY||gs===ST.LEVELUP){ drawHUD(); drawLeaderboard(); }
+  if(gs===ST.PLAY||gs===ST.LEVELUP){ drawHUD(); drawLeaderboard(); drawBanner(); drawBossBar(); drawWarning(); }
   if(gs===ST.PLAY && joy.active) drawJoystick();
+}
+function drawBanner(){
+  if(banner.life<=0) return;
+  const a=Math.min(1, banner.life/40);
+  ctx.save(); ctx.globalAlpha=a; ctx.textAlign='center';
+  ctx.fillStyle='#ffd45e'; ctx.font='bold 44px Trebuchet MS';
+  ctx.shadowColor='#000'; ctx.shadowBlur=10;
+  ctx.fillText(banner.text, VW/2, VH*0.3);
+  if(banner.sub){ ctx.fillStyle='#fff'; ctx.font='bold 20px Trebuchet MS'; ctx.fillText(banner.sub, VW/2, VH*0.3+34); }
+  ctx.restore();
+}
+function drawWarning(){
+  if(bossPhase!==1) return;
+  const pulse=0.4+0.4*Math.sin(frame*0.3);
+  ctx.save(); ctx.globalAlpha=pulse; ctx.fillStyle='#ff2030'; ctx.fillRect(0,0,VW,VH);
+  ctx.globalAlpha=1; ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 60px Trebuchet MS';
+  ctx.shadowColor='#000'; ctx.shadowBlur=14;
+  ctx.fillText('⚠ WARNING ⚠', VW/2, VH/2-10);
+  ctx.font='bold 26px Trebuchet MS'; ctx.fillText('FINAL BOSS APPROACHING', VW/2, VH/2+30);
+  ctx.restore();
+}
+function drawBossBar(){
+  if(!curBoss) return;
+  const w=Math.min(560,VW*0.7), h=20, x=(VW-w)/2, y=VH-46;
+  ctx.save();
+  ctx.fillStyle='#000a'; ctx.fillRect(x-3,y-3,w+6,h+6);
+  ctx.fillStyle='#3a0d12'; ctx.fillRect(x,y,w,h);
+  ctx.fillStyle='#ff3b3b'; ctx.fillRect(x,y,w*clamp(curBoss.hp/curBoss.maxHp,0,1),h);
+  ctx.strokeStyle='#fff8'; ctx.strokeRect(x,y,w,h);
+  ctx.fillStyle='#fff'; ctx.font='bold 14px Trebuchet MS'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🚀 '+curBoss.name+' — STAGE '+stage+' BOSS', VW/2, y+h/2+1);
+  ctx.restore();
 }
 function drawLeaderboard(){
   const rows=leaderboard().slice(0,8), x=VW-186, w=176, rh=22, y0=100;
@@ -201,7 +288,9 @@ function drawHUD(){
   ctx.fillText(Math.ceil(player.hp)+' / '+player.maxHp, hx+8, hy+hh/2+1);
   ctx.textBaseline='alphabetic'; ctx.font='bold 16px Trebuchet MS'; ctx.fillText('LV '+player.level, hx, hy+hh+18);
   ctx.textAlign='center'; ctx.font='bold 30px Trebuchet MS'; ctx.fillStyle='#fff'; ctx.fillText(fmt(Math.floor(time)), VW/2, 42);
-  ctx.textAlign='right'; ctx.font='bold 16px Trebuchet MS'; ctx.fillText('💀 '+player.kills, VW-14, 30);
+  ctx.font='bold 14px Trebuchet MS'; ctx.fillStyle='#ffd45e';
+  ctx.fillText('STAGE '+stage+'/'+TOTAL_STAGES+(bossPhase===0?'  ·  '+Math.min(stageKills,stageQuota(stage))+'/'+stageQuota(stage)+' 👾':bossPhase===1?'  ·  ⚠ WARNING':'  ·  🔥 BOSS'), VW/2, 62);
+  ctx.textAlign='right'; ctx.font='bold 16px Trebuchet MS'; ctx.fillStyle='#fff'; ctx.fillText('💀 '+player.kills, VW-14, 30);
 }
 function drawJoystick(){
   ctx.globalAlpha=0.3; ctx.strokeStyle='#fff'; ctx.lineWidth=3;
@@ -225,6 +314,7 @@ function renderCharSelect(){
 renderCharSelect();
 $('startBtn').onclick=startGame;
 $('retryBtn').onclick=startGame;
+$('winRetry').onclick=startGame;
 $('muteBtn').onclick=()=>{ $('muteBtn').textContent = toggleMute() ? '🔇' : '🔊'; };
 $('menuBest').textContent='Best: '+fmt(best);
 

@@ -5,6 +5,15 @@ loadImg('player','assets/doge-sprite.png');
 loadImg('mame','assets/doge-mame.png');
 loadImg('boss','assets/enemy-boss-doge.png');
 loadImg('gun','assets/gun.png');
+// stage boss roster (cycled across the 50-stage campaign)
+const BOSS_ROSTER = [
+  {img:'boss-doge',      name:'DOGE MONARCH',   ring:'#e8c04b'},
+  {img:'boss-pepe',      name:'PEPE LORD',      ring:'#3bd45e'},
+  {img:'boss-wojak',     name:'WOJAK',          ring:'#cdd6ff'},
+  {img:'boss-astronaut', name:'ASTEROID',       ring:'#4dd2ff'},
+  {img:'boss-bnb',       name:'BNB CHAIN KING', ring:'#f5b50a'},
+];
+BOSS_ROSTER.forEach(b=>loadImg(b.img,'assets/'+b.img+'.png'));
 ['pepe','shib','doge','floki','bonk'].forEach(k=>loadImg(k,'assets/coins/'+k+'.png'));
 
 // ---- playable characters (distinct sprite + a starting perk) ----
@@ -53,6 +62,19 @@ function spawnBoss(){
   const radius = Math.max(VW,VH)*0.62+80, ang=Math.random()*7;
   spawnEnemy({img:'boss',ring:'#ff3030',hp:1400,speed:0.95,dmg:26,size:128,xp:60,weapon:'⚔️'},
              player.x+Math.cos(ang)*radius, player.y+Math.sin(ang)*radius, true);
+}
+// big stage boss — bigger / tankier / harder each stage, cycling the roster
+function spawnStageBoss(stage){
+  const r = BOSS_ROSTER[(stage-1)%BOSS_ROSTER.length];
+  const hp = Math.round(700 + stage*150);
+  const size = Math.min(150 + stage*5, 300);
+  const dmg = Math.min(26 + stage*2, 80);
+  const ang=Math.random()*7, radius=Math.max(VW,VH)*0.6+150;
+  const e = { img:r.img, name:r.name, ring:r.ring, hp, maxHp:hp, hit:0, boss:true, stageBoss:true,
+    speed:0.80, dmg, size, xp:200,
+    x:player.x+Math.cos(ang)*radius, y:player.y+Math.sin(ang)*radius };
+  enemies.push(e);
+  return e;
 }
 
 // ---- auto weapon ----
