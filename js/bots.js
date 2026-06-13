@@ -6,6 +6,11 @@ const BOT_NAMES = [
   'Kevin','Maya','Lucas','Trang','Ryan','Anna','David','Yuki','Chloe','Sang',
   'Marco','Nina','Liam','Mia','Hoang','Ethan','Grace','Tom','Bao','Julia'
 ];
+// hunter "assassins" sent in to chase the leader — intimidating names
+const HUNTER_NAMES = [
+  'Hiro','Brian','Geniu','Kenji','Viktor','Ronin','Drago','Onyx','Kairos','Zeke',
+  'Magnus','Apex','Saito','Riku','Vex','Cipher','Reaper','Blaze','Titan','Nova'
+];
 const BOT_SKINS = ['player','mame'];
 const BOT_COLORS = ['#ff6b6b','#4dd2ff','#9b7bff','#5ed36b','#ffb02e','#ff7ad9','#7af0c0'];
 
@@ -22,6 +27,14 @@ function applyGrow(d, amount){
   d.damage = d.baseDmg + d.grow*0.25;
 }
 
+// pick an unused name from a pool (falls back to a numbered handle)
+function pickName(pool){
+  const used=new Set(bots.map(b=>b.name));
+  const free=pool.filter(n=>!used.has(n));
+  if(free.length) return free[Math.floor(Math.random()*free.length)];
+  return 'Hunter'+Math.floor(rand(10,99));
+}
+
 function makeBots(count){
   bots = [];
   const names = [...BOT_NAMES].sort(()=>Math.random()-0.5).slice(0, count);
@@ -36,6 +49,22 @@ function makeBots(count){
   }
 }
 
+// spawn a "hunter" that hunts the leader (player). It enters at the bottom of the
+// leaderboard (tiny grow) and climbs gradually toward the player's score, hits hard,
+// and orbits-and-shoots so the player must dodge.
+function spawnHunter(playerGrow){
+  const a=Math.random()*7, r=rand(720,1040);   // arrive from off-screen
+  const b={ name:pickName(HUNTER_NAMES), hunter:true, skin:BOT_SKINS[Math.floor(Math.random()*BOT_SKINS.length)],
+    color:'#ff2d2d',
+    x:player.x+Math.cos(a)*r, y:player.y+Math.sin(a)*r,
+    baseSize:54, size:54, baseHp:150, baseDmg:20, grow:rand(0,5), speed:rand(3.3,3.9),
+    hp:100, maxHp:100, alive:true, respawn:0, iframe:35,
+    fireCd:0, fireRate:Math.round(rand(20,30)), damage:20, bulletSpeed:8.6, aim:0, kills:0,
+    targetGrow:Math.max(20, playerGrow*1.05), climbRate:0.18 };
+  applyGrow(b,0); b.hp=b.maxHp; bots.push(b);
+  return b;
+}
+
 function nearestGemTo(x,y){ let best=null,bd=420*420;
   for(const g of gems){ const d=dist2(g.x,g.y,x,y); if(d<bd){bd=d;best=g;} } return best; }
 function nearestRival(self){ let best=null,bd=560*560; const list=[player,...bots];
@@ -47,8 +76,21 @@ function updateBots(){
     if(!b.alive){ if((b.respawn-=DT)<=0){ const a=Math.random()*7; b.x=player.x+Math.cos(a)*620; b.y=player.y+Math.sin(a)*620;
         b.grow=rand(0,8); applyGrow(b,0); b.hp=b.maxHp; b.alive=true; b.iframe=40; } continue; }
     if(b.iframe>0)b.iframe-=DT;
-    const rival=nearestRival(b), gem=nearestGemTo(b.x,b.y);
+    // hunters climb the leaderboard gradually (no sudden jumps)
+    if(b.hunter && b.grow < b.targetGrow) applyGrow(b, Math.min(b.climbRate*DT, b.targetGrow-b.grow));
     let mx=0,my=0;
+    if(b.hunter && player.hp>0){
+      // lock onto the player: orbit at shooting range, dodge in/out — forces player to dodge
+      const dx=player.x-b.x, dy=player.y-b.y, d=Math.hypot(dx,dy)||1, ideal=250;
+      if(d<ideal*0.72){ mx=-dx/d; my=-dy/d; }          // too close -> back off
+      else if(d>ideal*1.35){ mx=dx/d; my=dy/d; }        // far -> close in
+      else { mx=-dy/d; my=dx/d; }                       // mid -> strafe/orbit
+      b.aim=Math.atan2(dy,dx);
+      if((b.fireCd-=DT)<=0){ b.fireCd=b.fireRate;
+        bullets.push({ x:b.x,y:b.y, vx:Math.cos(b.aim)*b.bulletSpeed, vy:Math.sin(b.aim)*b.bulletSpeed,
+          dmg:b.damage, pierce:0, size:7, life:90, hits:[], from:b }); }
+    } else {
+    const rival=nearestRival(b), gem=nearestGemTo(b.x,b.y);
     if(rival){ const dx=rival.x-b.x, dy=rival.y-b.y, d=Math.hypot(dx,dy)||1;
       if(d<170){ mx=-dx/d; my=-dy/d; }                 // too close -> kite
       else if(gem){ const gx=gem.x-b.x,gy=gem.y-b.y,gd=Math.hypot(gx,gy)||1; mx=gx/gd; my=gy/gd; }  // grab food
@@ -59,6 +101,7 @@ function updateBots(){
           dmg:b.damage, pierce:0, size:6, life:80, hits:[], from:b }); }
     } else if(gem){ const gx=gem.x-b.x,gy=gem.y-b.y,gd=Math.hypot(gx,gy)||1; mx=gx/gd; my=gy/gd; }
     else { mx=Math.cos(frame*0.02+b.x); my=Math.sin(frame*0.02+b.y); }
+    }
     for(const o of bots){ if(o===b||!o.alive)continue; const dx=b.x-o.x,dy=b.y-o.y,d2=dx*dx+dy*dy;
       if(d2<90*90&&d2>0){ const d=Math.sqrt(d2); mx+=dx/d*0.5; my+=dy/d*0.5; } }
     const m=Math.hypot(mx,my)||1; b.x+=mx/m*b.speed*DT; b.y+=my/m*b.speed*DT;

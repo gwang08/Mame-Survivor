@@ -7,7 +7,9 @@ let best = +(localStorage.getItem('mamesurvivor_best')||0);
 let maxUnlocked = +(localStorage.getItem('mame_unlocked')||1);
 let selectedChar = 0, paused = false;
 let DT = 1, lastTs = 0;                 // delta-time: 1.0 == 60fps (keeps speed constant on any FPS)
-const BOT_COUNT = 7;
+const BOT_COUNT = 9;
+// arena difficulty director: sends "hunter" bots after a dominating player
+let arenaDir = { nextEval:0, nextSpawn:0 };
 
 // ---- campaign maps & stages ----
 const MAPS = [
@@ -170,6 +172,7 @@ function startArena(){
   player.name='YOU'; player.skin=CHARACTERS[selectedChar].key;
   applyGrow(player,0); player.hp=player.maxHp;
   gameMode='arena'; makeBots(BOT_COUNT);
+  arenaDir={ nextEval:frame+300, nextSpawn:frame+360 };   // grace period before hunters appear
   gs=ST.PLAY; hideOverlays(); location.hash='arena'; startAudio();
 }
 
@@ -304,6 +307,28 @@ function updateCampaign(){
   }
 }
 
+// Adaptive difficulty: when the player dominates (easy / nobody can kill them),
+// gradually send hunter bots. They enter low on the leaderboard and climb slowly,
+// and more of them are allowed as the player's score rises — never a sudden swarm.
+function arenaDirector(){
+  if(frame < arenaDir.nextEval) return;
+  arenaDir.nextEval = frame + 45;                 // re-check ~0.75s
+  const rows = leaderboard();
+  const playerRank = rows.findIndex(r=>r.you)+1;
+  const topBot = Math.max(0, ...bots.filter(b=>!b.hunter).map(b=>b.grow));
+  const dominating = playerRank===1 || player.grow > topBot*1.15;
+  const huntersAlive = bots.filter(b=>b.hunter && b.alive).length;
+  const wantHunters = Math.min(6, Math.floor(player.grow/40));   // scales with score
+  // keep current hunters trending toward the player's score so they stay a threat
+  for(const b of bots) if(b.hunter) b.targetGrow = Math.max(b.targetGrow, player.grow*1.05);
+  // add at most one new hunter every ~12s, only while dominating -> gradual ramp
+  if(dominating && huntersAlive < wantHunters && bots.length < 20 && frame >= arenaDir.nextSpawn){
+    arenaDir.nextSpawn = frame + 12*60;
+    const h = spawnHunter(player.grow);
+    showBanner('⚔️ '+h.name, 'is hunting you!'); beep(160,0.4,'sawtooth',0.06);
+  }
+}
+
 function updateArena(){
   // spawn floating food orbs around the player
   if(gems.length<90 && frame%14===0){
@@ -311,6 +336,7 @@ function updateArena(){
     gems.push({ x:player.x+Math.cos(a)*r, y:player.y+Math.sin(a)*r, v:rand(1,3), big:false });
   }
   updateBots();
+  arenaDirector();
   const dogs=[player,...bots];
   // bullets hit rival dogs
   for(let bi=bullets.length-1;bi>=0;bi--){
@@ -577,30 +603,9 @@ $('muteBtn').onclick=()=>{ const m=toggleMute(); $('muteBtn').innerHTML=spk(!m);
 $('menuBest').textContent='Best: '+fmt(best);
 
 // mode select (Campaign / Arena) — image cards
-// Arena is locked (under maintenance). Enforce in JS so it works even when
-// the cached index.html still has the old (unlocked) markup.
-(function lockArena(){
-  const a=document.querySelector('#modeSelect .mode[data-mode="arena"]');
-  if(!a) return;
-  a.classList.remove('sel'); a.classList.add('locked');
-  // inline styles → work even if cached index.html lacks the new CSS
-  a.style.position='relative'; a.style.cursor='not-allowed';
-  a.style.opacity='.6'; a.style.filter='grayscale(.75)';
-  if(!a.querySelector('.lockbadge')){
-    const b=document.createElement('span'); b.className='lockbadge'; b.textContent='🔒';
-    b.style.cssText='position:absolute;top:5px;right:7px;font-size:20px;filter:none';
-    a.insertBefore(b, a.firstChild);
-  }
-  const s=a.querySelector('small'); if(s){ s.textContent='🔒 UPDATING…'; s.style.color='#b00020'; s.style.fontWeight='900'; }
-})();
-// never let the locked mode stay selected
-if(document.querySelector('#modeSelect .mode[data-mode="'+gameMode+'"].locked')){
-  gameMode='campaign'; localStorage.setItem('mame_mode',gameMode);
-}
 document.querySelectorAll('#modeSelect .mode').forEach(btn=>{
   btn.classList.toggle('sel', btn.dataset.mode===gameMode);
   btn.onclick=()=>{
-    if(btn.classList.contains('locked')){ beep(300,0.14,'square',0.05); showSoonToast(); return; }
     gameMode=btn.dataset.mode; localStorage.setItem('mame_mode',gameMode);
     document.querySelectorAll('#modeSelect .mode').forEach(x=>x.classList.toggle('sel',x.dataset.mode===gameMode));
     beep(1000,0.05,'square',0.03); };
