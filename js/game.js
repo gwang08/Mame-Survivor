@@ -577,9 +577,15 @@ $('muteBtn').onclick=()=>{ const m=toggleMute(); $('muteBtn').innerHTML=spk(!m);
 $('menuBest').textContent='Best: '+fmt(best);
 
 // mode select (Campaign / Arena) — image cards
+// Arena is locked (under maintenance): never let it stay selected.
+if(document.querySelector('#modeSelect .mode[data-mode="'+gameMode+'"].locked')){
+  gameMode='campaign'; localStorage.setItem('mame_mode',gameMode);
+}
 document.querySelectorAll('#modeSelect .mode').forEach(btn=>{
   btn.classList.toggle('sel', btn.dataset.mode===gameMode);
-  btn.onclick=()=>{ gameMode=btn.dataset.mode; localStorage.setItem('mame_mode',gameMode);
+  btn.onclick=()=>{
+    if(btn.classList.contains('locked')){ beep(300,0.14,'square',0.05); showSoonToast(); return; }
+    gameMode=btn.dataset.mode; localStorage.setItem('mame_mode',gameMode);
     document.querySelectorAll('#modeSelect .mode').forEach(x=>x.classList.toggle('sel',x.dataset.mode===gameMode));
     beep(1000,0.05,'square',0.03); };
 });
