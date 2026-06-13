@@ -252,8 +252,15 @@ function updateCampaign(){
       spawnEnemy(COIN_TYPES[Math.floor(Math.random()*3)], curBoss.x+Math.cos(a)*110, curBoss.y+Math.sin(a)*110); }
   }
   // enemies (vs player only)
+  const _mv=moveVec(), _moving=(_mv.x||_mv.y), _head=_moving?Math.atan2(_mv.y,_mv.x):0;
+  const _farR=Math.max(VW,VH)*1.15+120;          // beyond this, an enemy is "left behind"
   for(let ei=enemies.length-1;ei>=0;ei--){
     const e=enemies[ei];
+    // anti-flee: enemies you outran get teleported back in FRONT of you (toward your heading)
+    if(dist2(e.x,e.y,player.x,player.y) > _farR*_farR){
+      const base=_moving?_head:Math.random()*7, a2=base+rand(-1.0,1.0), rad=Math.max(VW,VH)*0.6+rand(60,150);
+      e.x=player.x+Math.cos(a2)*rad; e.y=player.y+Math.sin(a2)*rad;
+    }
     const ang=Math.atan2(player.y-e.y,player.x-e.x);
     e.x+=Math.cos(ang)*e.speed*DT; e.y+=Math.sin(ang)*e.speed*DT;
     if(e.hit>0)e.hit-=DT;
