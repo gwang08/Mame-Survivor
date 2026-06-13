@@ -577,7 +577,23 @@ $('muteBtn').onclick=()=>{ const m=toggleMute(); $('muteBtn').innerHTML=spk(!m);
 $('menuBest').textContent='Best: '+fmt(best);
 
 // mode select (Campaign / Arena) — image cards
-// Arena is locked (under maintenance): never let it stay selected.
+// Arena is locked (under maintenance). Enforce in JS so it works even when
+// the cached index.html still has the old (unlocked) markup.
+(function lockArena(){
+  const a=document.querySelector('#modeSelect .mode[data-mode="arena"]');
+  if(!a) return;
+  a.classList.remove('sel'); a.classList.add('locked');
+  // inline styles → work even if cached index.html lacks the new CSS
+  a.style.position='relative'; a.style.cursor='not-allowed';
+  a.style.opacity='.6'; a.style.filter='grayscale(.75)';
+  if(!a.querySelector('.lockbadge')){
+    const b=document.createElement('span'); b.className='lockbadge'; b.textContent='🔒';
+    b.style.cssText='position:absolute;top:5px;right:7px;font-size:20px;filter:none';
+    a.insertBefore(b, a.firstChild);
+  }
+  const s=a.querySelector('small'); if(s){ s.textContent='🔒 UPDATING…'; s.style.color='#b00020'; s.style.fontWeight='900'; }
+})();
+// never let the locked mode stay selected
 if(document.querySelector('#modeSelect .mode[data-mode="'+gameMode+'"].locked')){
   gameMode='campaign'; localStorage.setItem('mame_mode',gameMode);
 }
